@@ -1,0 +1,21 @@
+{
+  "name": "azure-service-bus-manager-electron",
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsc && electron .",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@azure/service-bus": "^7.9.4",
+    "electron-squirrel-startup": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/electron-squirrel-startup": "^1.0.2",
+    "cross-env": "^7.0.3",
+    "electron": "^29.0.0",
+    "typescript": "^5.3.3"
+  }
+}
