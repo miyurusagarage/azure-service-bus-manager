@@ -2,6 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceBusManager = void 0;
 const service_bus_1 = require("@azure/service-bus");
+async function withTimeout(promise, timeoutMs) {
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            reject(new Error("Connection timed out. Please check your internet connection."));
+        }, timeoutMs);
+    });
+    return Promise.race([promise, timeoutPromise]);
+}
 function getServiceBusErrorMessage(error) {
     if (error instanceof Error) {
         // First try to parse if it's already a JSON error
@@ -16,6 +24,12 @@ function getServiceBusErrorMessage(error) {
         }
         // Check for specific Azure Service Bus error patterns
         const message = error.message.toLowerCase();
+        if (message.includes("timeout")) {
+            return {
+                message: "Connection timed out. Please check your internet connection.",
+                details: error.message,
+            };
+        }
         if (message.includes("unauthorized") || message.includes("401")) {
             return {
                 message: "Authentication failed. Please check your connection string and ensure you have the necessary permissions.",
@@ -25,18 +39,6 @@ function getServiceBusErrorMessage(error) {
         if (message.includes("network") || message.includes("enotfound")) {
             return {
                 message: "Network error. Please check your internet connection and VPN settings.",
-                details: error.message,
-            };
-        }
-        if (message.includes("timeout")) {
-            return {
-                message: "Connection timed out. Please check your network connection and try again.",
-                details: error.message,
-            };
-        }
-        if (message.includes("invalid connection string")) {
-            return {
-                message: "The connection string format is invalid. Please check your connection string.",
                 details: error.message,
             };
         }
@@ -56,16 +58,21 @@ class ServiceBusManager {
     }
     async connect(connectionString) {
         try {
-            this.client = new service_bus_1.ServiceBusClient(connectionString);
-            this.adminClient = new service_bus_1.ServiceBusAdministrationClient(connectionString);
-            // Extract namespace info from connection string
+            // Extract namespace info from connection string first
             const match = connectionString.match(/Endpoint=sb:\/\/([^.]+)\.servicebus\.windows\.net/);
             if (!match) {
                 throw new Error("Invalid connection string format");
             }
             const name = match[1];
             const endpoint = `sb://${name}.servicebus.windows.net/`;
-            // Verify connection by trying to list queues
+            // Quick connection test with 3-second timeout
+            await withTimeout(fetch(`https://${name}.servicebus.windows.net/`, {
+                method: "HEAD",
+            }), 3000);
+            // If connection test passes, initialize clients
+            this.client = new service_bus_1.ServiceBusClient(connectionString);
+            this.adminClient = new service_bus_1.ServiceBusAdministrationClient(connectionString);
+            // Verify Service Bus access
             await this.adminClient.listQueues().next();
             return { name, endpoint };
         }
