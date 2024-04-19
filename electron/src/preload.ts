@@ -11,5 +11,19 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   listTopics: () => ipcRenderer.invoke("list-topics"),
 
+  listSubscriptions: (topicName: string) => ipcRenderer.invoke("list-subscriptions", topicName),
+
+  peekQueueMessages: (queueName: string, maxMessages?: number) =>
+    ipcRenderer.invoke("peek-queue-messages", queueName, maxMessages),
+
+  peekQueueDeadLetterMessages: (queueName: string, maxMessages?: number) =>
+    ipcRenderer.invoke("peek-queue-dlq-messages", queueName, maxMessages),
+
+  peekSubscriptionMessages: (topicName: string, subscriptionName: string, maxMessages?: number) =>
+    ipcRenderer.invoke("peek-subscription-messages", topicName, subscriptionName, maxMessages),
+
+  sendMessage: (queueName: string, message: any) =>
+    ipcRenderer.invoke("send-message", queueName, message),
+
   disconnectServiceBus: () => ipcRenderer.invoke("disconnect-service-bus"),
 });
