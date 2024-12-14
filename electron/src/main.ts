@@ -40,7 +40,7 @@ async function createWindow() {
     console.log("Development server found, loading from dev server");
     try {
       await mainWindow.loadURL(devServerUrl);
-      mainWindow.webContents.openDevTools();
+      // mainWindow.webContents.openDevTools();
     } catch (err) {
       console.error("Failed to load development server:", err);
       app.quit();
