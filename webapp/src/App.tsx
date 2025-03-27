@@ -316,18 +316,16 @@ function App() {
             {
               title: "Queues",
               key: "queues",
-              icon: <FolderOutlined />,
               children: filteredQueues.map((queue) => ({
                 title: (
-                  <span className="flex items-start">
-                    <span className="break-words pr-2">{queue.name}</span>
-                    <span className="text-gray-500 whitespace-nowrap">
+                  <span className="ml-[-30px] flex items-start">
+                    <span className="text-gray-500 whitespace-nowrap pr-2">
                       ({queue.activeMessageCount}/{queue.messageCount})
                     </span>
+                    <span className="break-words">{queue.name}</span>
                   </span>
                 ),
                 key: `queue-${queue.name}`,
-                icon: <MessageOutlined />,
               })),
             },
           ]
@@ -337,11 +335,9 @@ function App() {
             {
               title: "Topics",
               key: "topics",
-              icon: <FolderOutlined />,
               children: filteredTopics.map((topic) => ({
                 title: topic,
                 key: `topic-${topic}`,
-                icon: <BellOutlined />,
               })),
             },
           ]
@@ -450,13 +446,14 @@ function App() {
             allowClear
           />
           <Tree
+            showIcon={true}
             treeData={getTreeData()}
             selectedKeys={selectedNode ? [selectedNode] : []}
             onSelect={(selectedKeys) => {
               const selected = selectedKeys[0]?.toString();
               setSelectedNode(selected || null);
             }}
-            className="[&_.ant-tree-node-content-wrapper]:border-b [&_.ant-tree-node-content-wrapper]:border-gray-100 [&_.ant-tree-treenode]:py-1 [&_.ant-tree-node-content-wrapper]:transition-colors [&_.ant-tree-node-content-wrapper:hover]:!bg-gray-50 [&_.ant-tree-node-selected]:!bg-blue-50 [&_.ant-tree-indent-unit]:!w-3 [&_.ant-tree-switcher]:!w-3 [&_.ant-tree-node-content-wrapper]:ml-0"
+            className="[&_.ant-tree-treenode]:py-1 [&_.ant-tree-node-content-wrapper:hover]:!bg-gray-100 [&_.ant-tree-node-selected]:!bg-blue-100 [&_.ant-tree-indent-unit]:!w-3 [&_.ant-tree-switcher]:!w-3 [&_.ant-tree-node-content-wrapper]:ml-0"
           />
           <div
             className={`absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-gray-200 transition-colors ${isResizing ? "bg-blue-400" : "bg-transparent"}`}
@@ -504,87 +501,89 @@ function App() {
                           <Spin size="large" />
                         </div>
                       ) : messages.length > 0 ? (
-                        <Table
-                          dataSource={messages.map((msg, index) => ({
-                            ...msg,
-                            key: msg.messageId || index,
-                            enqueuedTime: msg.enqueuedTime
-                              ? new Date(msg.enqueuedTime).toLocaleString()
-                              : undefined,
-                          }))}
-                          columns={[
-                            {
-                              title: "Seq No.",
-                              dataIndex: "sequenceNumber",
-                              key: "sequenceNumber",
-                              width: 100,
-                              render: (sequenceNumber: bigint) =>
-                                sequenceNumber?.toString() || "N/A",
-                            },
-                            {
-                              title: "Message ID",
-                              dataIndex: "messageId",
-                              key: "messageId",
-                              width: 220,
-                            },
-                            {
-                              title: "Content Type",
-                              dataIndex: "contentType",
-                              key: "contentType",
-                              width: 120,
-                              render: (contentType: string) =>
-                                contentType?.replace("application/", "") || "N/A",
-                            },
-                            {
-                              title: "Enqueued Time",
-                              dataIndex: "enqueuedTime",
-                              key: "enqueuedTime",
-                              width: 180,
-                            },
-                            {
-                              title: "Body",
-                              dataIndex: "body",
-                              key: "body",
-                              render: (body) => (
-                                <Button
-                                  type="link"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const message = messages.find((m) => m.body === body);
-                                    if (message) {
-                                      setSelectedMessage(message);
+                        <div className="h-[calc(100vh-280px)] overflow-auto">
+                          <Table
+                            dataSource={messages.map((msg, index) => ({
+                              ...msg,
+                              key: msg.messageId || index,
+                              enqueuedTime: msg.enqueuedTime
+                                ? new Date(msg.enqueuedTime).toLocaleString()
+                                : undefined,
+                            }))}
+                            columns={[
+                              {
+                                title: "Seq No.",
+                                dataIndex: "sequenceNumber",
+                                key: "sequenceNumber",
+                                width: 100,
+                                render: (sequenceNumber: bigint) =>
+                                  sequenceNumber?.toString() || "N/A",
+                              },
+                              {
+                                title: "Message ID",
+                                dataIndex: "messageId",
+                                key: "messageId",
+                                width: 220,
+                              },
+                              {
+                                title: "Content Type",
+                                dataIndex: "contentType",
+                                key: "contentType",
+                                width: 120,
+                                render: (contentType: string) =>
+                                  contentType?.replace("application/", "") || "N/A",
+                              },
+                              {
+                                title: "Enqueued Time",
+                                dataIndex: "enqueuedTime",
+                                key: "enqueuedTime",
+                                width: 180,
+                              },
+                              {
+                                title: "Body",
+                                dataIndex: "body",
+                                key: "body",
+                                render: (body) => (
+                                  <Button
+                                    type="link"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const message = messages.find((m) => m.body === body);
+                                      if (message) {
+                                        setSelectedMessage(message);
+                                      }
+                                    }}
+                                  >
+                                    View Body
+                                  </Button>
+                                ),
+                              },
+                              {
+                                title: "Actions",
+                                key: "actions",
+                                width: 100,
+                                render: (_, record) => (
+                                  <Button
+                                    type="link"
+                                    loading={
+                                      resendingMessage[
+                                        record.messageId || record.sequenceNumber?.toString() || ""
+                                      ]
                                     }
-                                  }}
-                                >
-                                  View Body
-                                </Button>
-                              ),
-                            },
-                            {
-                              title: "Actions",
-                              key: "actions",
-                              width: 100,
-                              render: (_, record) => (
-                                <Button
-                                  type="link"
-                                  loading={
-                                    resendingMessage[
-                                      record.messageId || record.sequenceNumber?.toString() || ""
-                                    ]
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleResendMessage(record, selectedNode || "");
-                                  }}
-                                >
-                                  Resend
-                                </Button>
-                              ),
-                            },
-                          ]}
-                          scroll={{ x: true }}
-                          pagination={false}
-                        />
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleResendMessage(record, selectedNode || "");
+                                    }}
+                                  >
+                                    Resend
+                                  </Button>
+                                ),
+                              },
+                            ]}
+                            scroll={{ x: true }}
+                            pagination={false}
+                          />
+                        </div>
                       ) : (
                         <Empty description="No messages found in queue" />
                       ),
@@ -597,87 +596,89 @@ function App() {
                           <Spin size="large" />
                         </div>
                       ) : dlqMessages.length > 0 ? (
-                        <Table
-                          dataSource={dlqMessages.map((msg, index) => ({
-                            ...msg,
-                            key: msg.messageId || index,
-                            enqueuedTime: msg.enqueuedTime
-                              ? new Date(msg.enqueuedTime).toLocaleString()
-                              : undefined,
-                          }))}
-                          columns={[
-                            {
-                              title: "Seq No.",
-                              dataIndex: "sequenceNumber",
-                              key: "sequenceNumber",
-                              width: 100,
-                              render: (sequenceNumber: bigint) =>
-                                sequenceNumber?.toString() || "N/A",
-                            },
-                            {
-                              title: "Message ID",
-                              dataIndex: "messageId",
-                              key: "messageId",
-                              width: 220,
-                            },
-                            {
-                              title: "Content Type",
-                              dataIndex: "contentType",
-                              key: "contentType",
-                              width: 120,
-                              render: (contentType: string) =>
-                                contentType?.replace("application/", "") || "N/A",
-                            },
-                            {
-                              title: "Enqueued Time",
-                              dataIndex: "enqueuedTime",
-                              key: "enqueuedTime",
-                              width: 180,
-                            },
-                            {
-                              title: "Body",
-                              dataIndex: "body",
-                              key: "body",
-                              render: (body) => (
-                                <Button
-                                  type="link"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const message = dlqMessages.find((m) => m.body === body);
-                                    if (message) {
-                                      setSelectedMessage(message);
+                        <div className="h-[calc(100vh-280px)] overflow-auto">
+                          <Table
+                            dataSource={dlqMessages.map((msg, index) => ({
+                              ...msg,
+                              key: msg.messageId || index,
+                              enqueuedTime: msg.enqueuedTime
+                                ? new Date(msg.enqueuedTime).toLocaleString()
+                                : undefined,
+                            }))}
+                            columns={[
+                              {
+                                title: "Seq No.",
+                                dataIndex: "sequenceNumber",
+                                key: "sequenceNumber",
+                                width: 100,
+                                render: (sequenceNumber: bigint) =>
+                                  sequenceNumber?.toString() || "N/A",
+                              },
+                              {
+                                title: "Message ID",
+                                dataIndex: "messageId",
+                                key: "messageId",
+                                width: 220,
+                              },
+                              {
+                                title: "Content Type",
+                                dataIndex: "contentType",
+                                key: "contentType",
+                                width: 120,
+                                render: (contentType: string) =>
+                                  contentType?.replace("application/", "") || "N/A",
+                              },
+                              {
+                                title: "Enqueued Time",
+                                dataIndex: "enqueuedTime",
+                                key: "enqueuedTime",
+                                width: 180,
+                              },
+                              {
+                                title: "Body",
+                                dataIndex: "body",
+                                key: "body",
+                                render: (body) => (
+                                  <Button
+                                    type="link"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const message = dlqMessages.find((m) => m.body === body);
+                                      if (message) {
+                                        setSelectedMessage(message);
+                                      }
+                                    }}
+                                  >
+                                    View Body
+                                  </Button>
+                                ),
+                              },
+                              {
+                                title: "Actions",
+                                key: "actions",
+                                width: 100,
+                                render: (_, record) => (
+                                  <Button
+                                    type="link"
+                                    loading={
+                                      resendingMessage[
+                                        record.messageId || record.sequenceNumber?.toString() || ""
+                                      ]
                                     }
-                                  }}
-                                >
-                                  View Body
-                                </Button>
-                              ),
-                            },
-                            {
-                              title: "Actions",
-                              key: "actions",
-                              width: 100,
-                              render: (_, record) => (
-                                <Button
-                                  type="link"
-                                  loading={
-                                    resendingMessage[
-                                      record.messageId || record.sequenceNumber?.toString() || ""
-                                    ]
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleResendMessage(record, selectedNode || "");
-                                  }}
-                                >
-                                  Resend
-                                </Button>
-                              ),
-                            },
-                          ]}
-                          scroll={{ x: true }}
-                          pagination={false}
-                        />
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleResendMessage(record, selectedNode || "");
+                                    }}
+                                  >
+                                    Resend
+                                  </Button>
+                                ),
+                              },
+                            ]}
+                            scroll={{ x: true }}
+                            pagination={false}
+                          />
+                        </div>
                       ) : (
                         <Empty description="No messages found in dead letter queue" />
                       ),
@@ -740,28 +741,6 @@ function App() {
               </div>
             </div>
           </div>
-          {selectedMessage?.applicationProperties &&
-            Object.keys(selectedMessage.applicationProperties).length > 0 && (
-              <div>
-                <div className="font-medium text-gray-500 mb-1">Application Properties</div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="whitespace-pre-wrap font-mono text-sm">
-                    {JSON.stringify(selectedMessage.applicationProperties, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            )}
-          {selectedMessage?.systemProperties &&
-            Object.keys(selectedMessage.systemProperties).length > 0 && (
-              <div>
-                <div className="font-medium text-gray-500 mb-1">System Properties</div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <pre className="whitespace-pre-wrap font-mono text-sm">
-                    {JSON.stringify(selectedMessage.systemProperties, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            )}
           <div>
             <div className="font-medium text-gray-500 mb-1">Message Body</div>
             <pre className="bg-gray-50 p-4 rounded-lg overflow-auto max-h-96 whitespace-pre-wrap font-mono text-sm">
