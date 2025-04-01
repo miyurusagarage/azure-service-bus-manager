@@ -62,7 +62,6 @@ export const ResizableSider: React.FC = () => {
         children: filteredQueues.map((queue: Queue) => ({
           title: `${queue.name} (${queue.activeMessageCount}/${queue.messageCount})`,
           key: `queue-${queue.name}`,
-          icon: <MessageOutlined />,
         })),
       },
       {
@@ -72,7 +71,6 @@ export const ResizableSider: React.FC = () => {
         children: filteredTopics.map((topic: string) => ({
           title: topic,
           key: `topic-${topic}`,
-          icon: <ApiOutlined />,
         })),
       },
     ];
@@ -108,6 +106,12 @@ export const ResizableSider: React.FC = () => {
                 setSelectedNode(selectedKeys[0] as string);
               }
             }}
+            style={{
+              fontSize: "14px",
+              lineHeight: "1.5",
+              padding: "0 8px",
+            }}
+            className="[&_.ant-tree-switcher]:mr-0 [&_.ant-tree-node-content-wrapper]:pl-1 [&_.ant-tree-switcher]:w-5 [&_.ant-tree-switcher:before]:w-5"
           />
         </div>
       </div>

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Button, Spin, Empty, Tabs, Input } from "antd";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
-import { MessageTable } from "./MessageTable";
+import { Button, Tabs, Empty } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import { useServiceBusStore } from "../stores/serviceBusStore";
 import { useServiceBus } from "../hooks/useServiceBus";
+import { MessageSearch } from "./MessageSearch";
+import { MessageList } from "./MessageList";
+import { useMessageFilter } from "../hooks/useMessageFilter";
 
 export const QueueViewer: React.FC = () => {
   const {
@@ -19,6 +21,9 @@ export const QueueViewer: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const { handlePeekMessages, handlePeekDlqMessages, handleResendMessage } = useServiceBus();
+
+  const filteredMessages = useMessageFilter(messages, searchTerm);
+  const filteredDlqMessages = useMessageFilter(dlqMessages, searchTerm);
 
   useEffect(() => {
     if (selectedNode?.startsWith("queue-")) {
@@ -50,18 +55,6 @@ export const QueueViewer: React.FC = () => {
     }
   };
 
-  const filterMessages = (messages: any[]) => {
-    if (!searchTerm) return messages;
-    const term = searchTerm.toLowerCase();
-    return messages.filter((msg) => {
-      const body = typeof msg.body === "string" ? msg.body : JSON.stringify(msg.body);
-      return body.toLowerCase().includes(term);
-    });
-  };
-
-  const filteredMessages = filterMessages(messages);
-  const filteredDlqMessages = filterMessages(dlqMessages);
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -92,34 +85,19 @@ export const QueueViewer: React.FC = () => {
               label: "Messages",
               children: (
                 <>
-                  <div className="mb-4">
-                    <Input.Search
-                      placeholder="Search in message body..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                      allowClear
-                    />
-                  </div>
-                  {isLoadingMessages ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Spin size="large" />
-                    </div>
-                  ) : filteredMessages.length > 0 ? (
-                    <MessageTable
-                      messages={filteredMessages}
-                      onViewMessage={setSelectedMessage}
-                      onResendMessage={handleResendMessage}
-                      resendingMessage={resendingMessage}
-                      queueName={selectedNode}
-                    />
-                  ) : (
-                    <Empty
-                      description={
-                        searchTerm ? "No messages match your search" : "No messages found in queue"
-                      }
-                    />
-                  )}
+                  <MessageSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+                  <MessageList
+                    messages={filteredMessages}
+                    isLoading={isLoadingMessages}
+                    searchTerm={searchTerm}
+                    onViewMessage={setSelectedMessage}
+                    onResendMessage={handleResendMessage}
+                    resendingMessage={resendingMessage}
+                    queueName={selectedNode}
+                    emptyMessage={
+                      searchTerm ? "No messages match your search" : "No messages found in queue"
+                    }
+                  />
                 </>
               ),
             },
@@ -128,36 +106,21 @@ export const QueueViewer: React.FC = () => {
               label: "Dead Letter Queue",
               children: (
                 <>
-                  <div className="mb-4">
-                    <Input.Search
-                      placeholder="Search in message body..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                      allowClear
-                    />
-                  </div>
-                  {isLoadingDlqMessages ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Spin size="large" />
-                    </div>
-                  ) : filteredDlqMessages.length > 0 ? (
-                    <MessageTable
-                      messages={filteredDlqMessages}
-                      onViewMessage={setSelectedMessage}
-                      onResendMessage={handleResendMessage}
-                      resendingMessage={resendingMessage}
-                      queueName={selectedNode}
-                    />
-                  ) : (
-                    <Empty
-                      description={
-                        searchTerm
-                          ? "No messages match your search"
-                          : "No messages found in dead letter queue"
-                      }
-                    />
-                  )}
+                  <MessageSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+                  <MessageList
+                    messages={filteredDlqMessages}
+                    isLoading={isLoadingDlqMessages}
+                    searchTerm={searchTerm}
+                    onViewMessage={setSelectedMessage}
+                    onResendMessage={handleResendMessage}
+                    resendingMessage={resendingMessage}
+                    queueName={selectedNode}
+                    emptyMessage={
+                      searchTerm
+                        ? "No messages match your search"
+                        : "No messages found in dead letter queue"
+                    }
+                  />
                 </>
               ),
             },
