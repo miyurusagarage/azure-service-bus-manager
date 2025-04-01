@@ -42,7 +42,11 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       title: "Enqueued Time",
       dataIndex: "enqueuedTime",
       key: "enqueuedTime",
-      width: 180,
+      width: 220,
+      render: (enqueuedTime: Date) => {
+        if (!enqueuedTime) return "N/A";
+        return enqueuedTime.toLocaleString();
+      },
     },
     {
       title: "Body",
