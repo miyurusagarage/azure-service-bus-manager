@@ -23,7 +23,7 @@ async function waitForWebServer(url: string, maxAttempts: number = 10): Promise<
 
 async function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1300,
     height: 800,
     webPreferences: {
       nodeIntegration: true,

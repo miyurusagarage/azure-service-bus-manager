@@ -23,51 +23,66 @@ interface QueueInfo {
 interface ElectronAPI {
   connectServiceBus: (connectionString: string) => Promise<{
     success: boolean;
-    data?: {
-      name: string;
-      endpoint: string;
-    };
+    data?: { name: string; endpoint: string };
     error?: string;
   }>;
-
+  disconnectServiceBus: () => Promise<void>;
   listQueues: () => Promise<{
     success: boolean;
-    data?: QueueInfo[];
+    data?: Array<{ name: string; activeMessageCount: number; messageCount: number }>;
     error?: string;
   }>;
-
   listTopics: () => Promise<{
     success: boolean;
     data?: string[];
     error?: string;
   }>;
-
-  listSubscriptions: (topicName: string) => Promise<{
-    success: boolean;
-    data?: string[];
-    error?: string;
-  }>;
-
   peekQueueMessages: (
     queueName: string,
-    maxMessages?: number
+    count: number,
+    fromSequenceNumber: number
   ) => Promise<{
     success: boolean;
-    data?: ServiceBusMessage[];
+    data?: Array<{
+      messageId?: string;
+      body: any;
+      contentType?: string;
+      correlationId?: string;
+      subject?: string;
+      sessionId?: string;
+      enqueuedTime?: string;
+      sequenceNumber?: bigint;
+    }>;
     error?: string;
   }>;
-
-  peekSubscriptionMessages: (
-    topicName: string,
-    subscriptionName: string,
-    maxMessages?: number
+  peekQueueDeadLetterMessages: (
+    queueName: string,
+    count: number
   ) => Promise<{
     success: boolean;
-    data?: ServiceBusMessage[];
+    data?: Array<{
+      messageId?: string;
+      body: any;
+      contentType?: string;
+      correlationId?: string;
+      subject?: string;
+      sessionId?: string;
+      enqueuedTime?: string;
+      sequenceNumber?: bigint;
+    }>;
     error?: string;
   }>;
-
-  disconnectServiceBus: () => Promise<{
+  sendMessage: (
+    queueName: string,
+    message: {
+      messageId?: string;
+      body: any;
+      contentType?: string;
+      correlationId?: string;
+      subject?: string;
+      sessionId?: string;
+    }
+  ) => Promise<{
     success: boolean;
     error?: string;
   }>;
@@ -78,3 +93,5 @@ declare global {
     electronAPI: ElectronAPI;
   }
 }
+
+export {};
