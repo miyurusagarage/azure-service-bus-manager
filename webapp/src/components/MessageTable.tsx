@@ -83,7 +83,7 @@ export const MessageTable: React.FC<MessageTableProps> = ({
   ];
 
   return (
-    <div className="h-[calc(100vh-280px)] overflow-auto">
+    <div className="overflow-auto">
       <Table
         dataSource={messages.map((msg, index) => ({
           ...msg,
