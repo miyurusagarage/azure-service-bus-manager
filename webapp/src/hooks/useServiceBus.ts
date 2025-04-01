@@ -28,6 +28,8 @@ export const useServiceBus = () => {
     setMessages,
     setDlqMessages,
     setResendingMessage,
+    setIsLoadingMessages,
+    setIsLoadingDlqMessages,
     resetState,
   } = useServiceBusStore();
 
@@ -53,7 +55,7 @@ export const useServiceBus = () => {
 
   const handlePeekMessages = async (queueName: string) => {
     try {
-      setLoading(true);
+      setIsLoadingMessages(true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
       const result = await window.electronAPI.peekQueueMessages(cleanQueueName, 10, 0);
@@ -88,13 +90,13 @@ export const useServiceBus = () => {
       console.error("Failed to peek messages:", error);
       setMessages([]);
     } finally {
-      setLoading(false);
+      setIsLoadingMessages(false);
     }
   };
 
   const handlePeekDlqMessages = async (queueName: string) => {
     try {
-      setLoading(true);
+      setIsLoadingDlqMessages(true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
       const result = await window.electronAPI.peekQueueDeadLetterMessages(cleanQueueName, 10);
@@ -113,7 +115,7 @@ export const useServiceBus = () => {
       console.error("Failed to peek DLQ messages:", error);
       setDlqMessages([]);
     } finally {
-      setLoading(false);
+      setIsLoadingDlqMessages(false);
     }
   };
 

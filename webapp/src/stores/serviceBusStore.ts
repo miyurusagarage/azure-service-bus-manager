@@ -40,6 +40,8 @@ interface ServiceBusState {
   setConnected: (connected: boolean) => void;
   setNamespaceInfo: (info: NamespaceInfo | null) => void;
   setLastConnectionString: (connectionString: string) => void;
+  setIsLoadingMessages: (loading: boolean) => void;
+  setIsLoadingDlqMessages: (loading: boolean) => void;
   resetState: () => void;
 }
 
@@ -77,6 +79,8 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   setConnected: (connected) => set({ isConnected: connected }),
   setNamespaceInfo: (info) => set({ namespaceInfo: info }),
   setLastConnectionString: (connectionString) => set({ lastConnectionString: connectionString }),
+  setIsLoadingMessages: (loading) => set({ isLoadingMessages: loading }),
+  setIsLoadingDlqMessages: (loading) => set({ isLoadingDlqMessages: loading }),
   resetState: () =>
     set({
       isConnected: false,
