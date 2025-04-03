@@ -388,6 +388,68 @@ export class ServiceBusManager {
     }
   }
 
+  async deleteMessage(queueName: string, message: ServiceBusMessage): Promise<void> {
+    if (!this.client) {
+      throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
+    }
+
+    let receiver = null;
+    try {
+      // Create a receiver in peekLock mode
+      receiver = this.client.createReceiver(queueName, {
+        receiveMode: "peekLock",
+        skipParsingBodyAsJson: false,
+      });
+
+      // Receive messages until we find the one we want to delete
+      let foundMessage = false;
+      let attempts = 0;
+      const maxAttempts = 10; // Limit the number of attempts to avoid infinite loops
+
+      while (!foundMessage && attempts < maxAttempts) {
+        const receivedMessages = await receiver.receiveMessages(1, {
+          maxWaitTimeInMs: 5000,
+        });
+
+        if (receivedMessages.length === 0) {
+          break; // No more messages to receive
+        }
+
+        const receivedMessage = receivedMessages[0];
+
+        // Check if this is the message we want to delete
+        if (receivedMessage.sequenceNumber?.toString() === message.sequenceNumber?.toString()) {
+          // Complete (delete) the message
+          await receiver.completeMessage(receivedMessage);
+          console.log("Message deleted from queue:", queueName);
+          foundMessage = true;
+        } else {
+          // Not the message we want, abandon it so it goes back to the queue
+          await receiver.abandonMessage(receivedMessage);
+        }
+
+        attempts++;
+      }
+
+      if (!foundMessage) {
+        throw new Error("Message not found after multiple attempts");
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      const serviceBusError = getServiceBusErrorMessage(error);
+      throw new Error(JSON.stringify(serviceBusError));
+    } finally {
+      if (receiver) {
+        try {
+          await receiver.close();
+          console.log("Closed receiver for queue:", queueName);
+        } catch (closeError) {
+          console.error("Error closing receiver:", closeError);
+        }
+      }
+    }
+  }
+
   disconnect(): void {
     if (this.client) {
       this.client.close();

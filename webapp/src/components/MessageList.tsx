@@ -8,10 +8,13 @@ interface MessageListProps {
   isLoading: boolean;
   searchTerm: string;
   onViewMessage: (message: ServiceBusMessage) => void;
-  onResendMessage: (message: ServiceBusMessage, queueName: string) => Promise<void>;
-  resendingMessage: { [key: string]: boolean };
+  onDeleteMessage: (message: ServiceBusMessage, queueName: string) => Promise<void>;
+  onResendMessage?: (message: ServiceBusMessage, queueName: string) => Promise<void>;
+  deletingMessage: { [key: string]: boolean };
+  resendingMessage?: { [key: string]: boolean };
   queueName: string;
   emptyMessage: string;
+  isDlq?: boolean;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -19,10 +22,13 @@ export const MessageList: React.FC<MessageListProps> = ({
   isLoading,
   searchTerm,
   onViewMessage,
+  onDeleteMessage,
   onResendMessage,
+  deletingMessage,
   resendingMessage,
   queueName,
   emptyMessage,
+  isDlq = false,
 }) => {
   if (isLoading) {
     return (
@@ -40,9 +46,12 @@ export const MessageList: React.FC<MessageListProps> = ({
     <MessageTable
       messages={messages}
       onViewMessage={onViewMessage}
+      onDeleteMessage={onDeleteMessage}
       onResendMessage={onResendMessage}
+      deletingMessage={deletingMessage}
       resendingMessage={resendingMessage}
       queueName={queueName}
+      isDlq={isDlq}
     />
   );
 };

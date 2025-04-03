@@ -26,6 +26,7 @@ interface ServiceBusState {
   dlqMessages: ServiceBusMessage[];
   isLoadingDlqMessages: boolean;
   selectedMessage: ServiceBusMessage | null;
+  deletingMessage: { [key: string]: boolean };
   resendingMessage: { [key: string]: boolean };
 
   // Actions
@@ -34,6 +35,7 @@ interface ServiceBusState {
   setSelectedMessage: (message: ServiceBusMessage | null) => void;
   setMessages: (messages: ServiceBusMessage[]) => void;
   setDlqMessages: (messages: ServiceBusMessage[]) => void;
+  setDeletingMessage: (key: string, value: boolean) => void;
   setResendingMessage: (key: string, value: boolean) => void;
   setError: (error: ServiceBusError | null) => void;
   setLoading: (loading: boolean) => void;
@@ -59,6 +61,7 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   dlqMessages: [],
   isLoadingDlqMessages: false,
   selectedMessage: null,
+  deletingMessage: {},
   resendingMessage: {},
 
   // Actions
@@ -67,6 +70,13 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   setSelectedMessage: (message) => set({ selectedMessage: message }),
   setMessages: (messages) => set({ messages }),
   setDlqMessages: (messages) => set({ dlqMessages: messages }),
+  setDeletingMessage: (key, value) =>
+    set((state) => ({
+      deletingMessage: {
+        ...state.deletingMessage,
+        [key]: value,
+      },
+    })),
   setResendingMessage: (key, value) =>
     set((state) => ({
       resendingMessage: {
@@ -95,6 +105,7 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
       dlqMessages: [],
       isLoadingDlqMessages: false,
       selectedMessage: null,
+      deletingMessage: {},
       resendingMessage: {},
     }),
 }));

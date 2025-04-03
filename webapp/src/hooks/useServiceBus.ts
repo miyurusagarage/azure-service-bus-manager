@@ -1,5 +1,6 @@
 import { useServiceBusStore } from "../stores/serviceBusStore";
 import type { ServiceBusMessage, ServiceBusError, QueueInfo } from "../types/serviceBus";
+import { message as antMessage } from "antd";
 
 interface NamespaceInfo {
   name: string;
@@ -18,6 +19,7 @@ export const useServiceBus = () => {
     isLoadingMessages,
     dlqMessages,
     isLoadingDlqMessages,
+    deletingMessage,
     resendingMessage,
     lastConnectionString,
     setError,
@@ -27,29 +29,37 @@ export const useServiceBus = () => {
     setLastConnectionString,
     setMessages,
     setDlqMessages,
+    setDeletingMessage,
     setResendingMessage,
     setIsLoadingMessages,
     setIsLoadingDlqMessages,
     resetState,
   } = useServiceBusStore();
 
-  const handleResendMessage = async (message: ServiceBusMessage, queueName: string) => {
+  const handleDeleteMessage = async (message: ServiceBusMessage, queueName: string) => {
     const messageKey = message.messageId || message.sequenceNumber?.toString() || "";
     try {
-      setResendingMessage(messageKey, true);
+      setDeletingMessage(messageKey, true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
-      const result = await window.electronAPI.sendMessage(cleanQueueName, message);
+      const result = await window.electronAPI.deleteMessage(cleanQueueName, message);
       if (!result.success) {
-        throw new Error(result.error || "Failed to send message");
+        throw new Error(result.error || "Failed to delete message");
       }
 
-      // Refresh the messages after successful resend
+      // Show success message
+      antMessage.success("Message deleted successfully");
+
+      // Refresh the messages after successful delete
       await handlePeekMessages(cleanQueueName);
     } catch (error) {
-      console.error("Failed to resend message:", error);
+      console.error("Failed to delete message:", error);
+      // Show error message
+      antMessage.error(
+        "Failed to delete message: " + (error instanceof Error ? error.message : String(error))
+      );
     } finally {
-      setResendingMessage(messageKey, false);
+      setDeletingMessage(messageKey, false);
     }
   };
 
@@ -116,6 +126,34 @@ export const useServiceBus = () => {
       setDlqMessages([]);
     } finally {
       setIsLoadingDlqMessages(false);
+    }
+  };
+
+  const handleResendMessage = async (message: ServiceBusMessage, queueName: string) => {
+    const messageKey = message.messageId || message.sequenceNumber?.toString() || "";
+    try {
+      setResendingMessage(messageKey, true);
+      const cleanQueueName = queueName.replace(/^queue-/, "");
+
+      // Send the message back to the main queue
+      const result = await window.electronAPI.sendMessage(cleanQueueName, message);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to resend message");
+      }
+
+      // Show success message
+      antMessage.success("Message resent successfully");
+
+      // Refresh the DLQ messages after successful resend
+      await handlePeekDlqMessages(cleanQueueName);
+    } catch (error) {
+      console.error("Failed to resend message:", error);
+      // Show error message
+      antMessage.error(
+        "Failed to resend message: " + (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      setResendingMessage(messageKey, false);
     }
   };
 
@@ -213,11 +251,13 @@ export const useServiceBus = () => {
     isLoadingMessages,
     dlqMessages,
     isLoadingDlqMessages,
+    deletingMessage,
     resendingMessage,
     handleConnect,
     handleDisconnect,
     handlePeekMessages,
     handlePeekDlqMessages,
+    handleDeleteMessage,
     handleResendMessage,
   };
 };

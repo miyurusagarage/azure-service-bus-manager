@@ -14,13 +14,15 @@ export const QueueViewer: React.FC = () => {
     dlqMessages,
     isLoadingMessages,
     isLoadingDlqMessages,
+    deletingMessage,
     resendingMessage,
     selectedMessage,
     setSelectedMessage,
   } = useServiceBusStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { handlePeekMessages, handlePeekDlqMessages, handleResendMessage } = useServiceBus();
+  const { handlePeekMessages, handlePeekDlqMessages, handleDeleteMessage, handleResendMessage } =
+    useServiceBus();
 
   const filteredMessages = useMessageFilter(messages, searchTerm);
   const filteredDlqMessages = useMessageFilter(dlqMessages, searchTerm);
@@ -91,8 +93,8 @@ export const QueueViewer: React.FC = () => {
                     isLoading={isLoadingMessages}
                     searchTerm={searchTerm}
                     onViewMessage={setSelectedMessage}
-                    onResendMessage={handleResendMessage}
-                    resendingMessage={resendingMessage}
+                    onDeleteMessage={handleDeleteMessage}
+                    deletingMessage={deletingMessage}
                     queueName={selectedNode}
                     emptyMessage={
                       searchTerm ? "No messages match your search" : "No messages found in queue"
@@ -112,7 +114,9 @@ export const QueueViewer: React.FC = () => {
                     isLoading={isLoadingDlqMessages}
                     searchTerm={searchTerm}
                     onViewMessage={setSelectedMessage}
+                    onDeleteMessage={handleDeleteMessage}
                     onResendMessage={handleResendMessage}
+                    deletingMessage={deletingMessage}
                     resendingMessage={resendingMessage}
                     queueName={selectedNode}
                     emptyMessage={
@@ -120,6 +124,7 @@ export const QueueViewer: React.FC = () => {
                         ? "No messages match your search"
                         : "No messages found in dead letter queue"
                     }
+                    isDlq={true}
                   />
                 </>
               ),

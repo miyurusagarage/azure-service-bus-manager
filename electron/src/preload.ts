@@ -25,5 +25,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   sendMessage: (queueName: string, message: any) =>
     ipcRenderer.invoke("send-message", queueName, message),
 
+  deleteMessage: (queueName: string, message: any) =>
+    ipcRenderer.invoke("delete-message", queueName, message),
+
   disconnectServiceBus: () => ipcRenderer.invoke("disconnect-service-bus"),
 });

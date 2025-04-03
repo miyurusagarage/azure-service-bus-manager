@@ -86,6 +86,21 @@ interface ElectronAPI {
     success: boolean;
     error?: string;
   }>;
+  deleteMessage: (
+    queueName: string,
+    message: {
+      messageId?: string;
+      body: any;
+      contentType?: string;
+      correlationId?: string;
+      subject?: string;
+      sessionId?: string;
+      sequenceNumber?: bigint;
+    }
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
 }
 
 declare global {
