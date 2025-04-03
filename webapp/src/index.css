@@ -22,3 +22,19 @@ body {
   height: auto !important;
   padding: 1rem !important;
 }
+
+.ant-tree-list {
+  padding: 0 !important;
+}
+
+.ant-tree-node-content-wrapper {
+  padding: 0 !important;
+}
+
+.ant-tree-switcher-noop {
+  width: 0.75rem !important;
+}
+
+.ant-tree-title {
+  padding: 0 0.5rem !important;
+}
