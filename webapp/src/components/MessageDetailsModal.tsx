@@ -16,35 +16,38 @@ export const MessageDetailsModal: React.FC<MessageDetailsModalProps> = ({
   if (!message) return null;
 
   return (
-    <Modal title="Message Details" open={visible} onCancel={onClose} footer={null} width={800}>
+    <Modal
+      title="Message Details"
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      width={800}
+      centered={true}
+      styles={{
+        body: {
+          maxHeight: "calc(100vh - 200px)",
+          overflow: "auto",
+        },
+      }}
+    >
       <div className="space-y-4">
-        <div>
-          <div className="text-sm text-gray-500">Message ID</div>
-          <div className="font-mono">{message.messageId || "N/A"}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Sequence Number</div>
-          <div className="font-mono">{message.sequenceNumber?.toString() || "N/A"}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Content Type</div>
-          <div>{message.contentType?.replace("application/", "") || "N/A"}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Correlation ID</div>
-          <div>{message.correlationId || "N/A"}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Subject</div>
-          <div>{message.subject || "N/A"}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Session ID</div>
-          <div>{message.sessionId || "N/A"}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Enqueued Time</div>
-          <div>{message.enqueuedTime?.toLocaleString() || "N/A"}</div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-sm text-gray-500">Message ID</div>
+            <div className="font-mono">{message.messageId || "N/A"}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Sequence Number</div>
+            <div className="font-mono">{message.sequenceNumber?.toString() || "N/A"}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Content Type</div>
+            <div>{message.contentType?.replace("application/", "") || "N/A"}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Enqueued Time</div>
+            <div>{message.enqueuedTime?.toLocaleString() || "N/A"}</div>
+          </div>
         </div>
         <div>
           <div className="text-sm text-gray-500">Body</div>
