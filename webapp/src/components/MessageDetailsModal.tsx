@@ -25,13 +25,13 @@ export const MessageDetailsModal: React.FC<MessageDetailsModalProps> = ({
       centered={true}
       styles={{
         body: {
-          maxHeight: "calc(100vh - 200px)",
-          overflow: "auto",
+          height: "calc(100vh - 140px)",
+          padding: "24px 24px 0 24px",
         },
       }}
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="h-full flex flex-col">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <div className="text-sm text-gray-500">Message ID</div>
             <div className="font-mono">{message.messageId || "N/A"}</div>
@@ -49,28 +49,35 @@ export const MessageDetailsModal: React.FC<MessageDetailsModalProps> = ({
             <div>{message.enqueuedTime?.toLocaleString() || "N/A"}</div>
           </div>
         </div>
-        <div>
-          <div className="text-sm text-gray-500">Body</div>
-          <pre className="bg-gray-50 p-4 rounded-lg overflow-auto max-h-[400px]">
-            {JSON.stringify(message.body, null, 2)}
-          </pre>
+        <div className="flex-1 overflow-auto space-y-4 pr-6 -mr-6 pb-6">
+          <div>
+            <div className="text-sm text-gray-500 sticky top-0 bg-white py-2">Body</div>
+            <pre className="bg-gray-50 p-4 rounded-lg overflow-auto">
+              {JSON.stringify(message.body, null, 2)}
+            </pre>
+          </div>
+          {message.applicationProperties &&
+            Object.keys(message.applicationProperties).length > 0 && (
+              <div>
+                <div className="text-sm text-gray-500 sticky top-0 bg-white py-2">
+                  Application Properties
+                </div>
+                <pre className="bg-gray-50 p-4 rounded-lg overflow-auto">
+                  {JSON.stringify(message.applicationProperties, null, 2)}
+                </pre>
+              </div>
+            )}
+          {message.systemProperties && Object.keys(message.systemProperties).length > 0 && (
+            <div>
+              <div className="text-sm text-gray-500 sticky top-0 bg-white py-2">
+                System Properties
+              </div>
+              <pre className="bg-gray-50 p-4 rounded-lg overflow-auto">
+                {JSON.stringify(message.systemProperties, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
-        {message.applicationProperties && Object.keys(message.applicationProperties).length > 0 && (
-          <div>
-            <div className="text-sm text-gray-500">Application Properties</div>
-            <pre className="bg-gray-50 p-4 rounded-lg overflow-auto max-h-[400px]">
-              {JSON.stringify(message.applicationProperties, null, 2)}
-            </pre>
-          </div>
-        )}
-        {message.systemProperties && Object.keys(message.systemProperties).length > 0 && (
-          <div>
-            <div className="text-sm text-gray-500">System Properties</div>
-            <pre className="bg-gray-50 p-4 rounded-lg overflow-auto max-h-[400px]">
-              {JSON.stringify(message.systemProperties, null, 2)}
-            </pre>
-          </div>
-        )}
       </div>
     </Modal>
   );
