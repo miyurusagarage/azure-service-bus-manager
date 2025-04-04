@@ -1,6 +1,6 @@
 import React from "react";
 import { Tree, Input } from "antd";
-import { FolderOutlined, MessageOutlined, BellOutlined } from "@ant-design/icons";
+import { ApiOutlined, MessageOutlined, BellOutlined } from "@ant-design/icons";
 import type { TreeItem } from "../types/serviceBus";
 
 interface ServiceBusTreeProps {
@@ -71,11 +71,10 @@ export const ServiceBusTree: React.FC<ServiceBusTreeProps> = ({
             {
               title: "Topics",
               key: "topics",
-              icon: <FolderOutlined />,
+              icon: <ApiOutlined />,
               children: filteredTopics.map((topic) => ({
                 title: topic,
                 key: `topic-${topic}`,
-                icon: <BellOutlined />,
               })),
             },
           ]

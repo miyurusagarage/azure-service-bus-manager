@@ -77,8 +77,13 @@ export const QueueViewer: React.FC = () => {
         <Tabs
           defaultActiveKey="messages"
           onChange={(activeKey) => {
-            if (activeKey === "dlq") {
-              handleDlqTabChange();
+            if (selectedNode?.startsWith("queue-")) {
+              const queueName = selectedNode.replace("queue-", "");
+              if (activeKey === "dlq") {
+                handlePeekDlqMessages(queueName);
+              } else {
+                handlePeekMessages(queueName);
+              }
             }
           }}
           items={[
