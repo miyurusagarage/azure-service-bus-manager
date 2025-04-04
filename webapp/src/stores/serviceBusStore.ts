@@ -14,7 +14,7 @@ interface ServiceBusState {
   namespaceInfo: NamespaceInfo | null;
   error: ServiceBusError | null;
   isLoading: boolean;
-  lastConnectionString: string;
+  lastConnectionString: string | null;
 
   // Queue/Topic selection
   selectedNode: string | null;
@@ -26,8 +26,8 @@ interface ServiceBusState {
   dlqMessages: ServiceBusMessage[];
   isLoadingDlqMessages: boolean;
   selectedMessage: ServiceBusMessage | null;
-  deletingMessage: { [key: string]: boolean };
-  resendingMessage: { [key: string]: boolean };
+  deletingMessage: Record<string, boolean>;
+  resendingMessage: Record<string, boolean>;
 
   // Actions
   setSelectedNode: (node: string | null) => void;
@@ -45,6 +45,8 @@ interface ServiceBusState {
   setIsLoadingMessages: (loading: boolean) => void;
   setIsLoadingDlqMessages: (loading: boolean) => void;
   resetState: () => void;
+  viewMode: "peek" | "receive";
+  setViewMode: (mode: "peek" | "receive") => void;
 }
 
 export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
@@ -53,7 +55,7 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   namespaceInfo: null,
   error: null,
   isLoading: false,
-  lastConnectionString: "",
+  lastConnectionString: null,
   selectedNode: null,
   searchTerm: "",
   messages: [],
@@ -63,6 +65,7 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   selectedMessage: null,
   deletingMessage: {},
   resendingMessage: {},
+  viewMode: "peek",
 
   // Actions
   setSelectedNode: (node) => set({ selectedNode: node }),
@@ -91,13 +94,14 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   setLastConnectionString: (connectionString) => set({ lastConnectionString: connectionString }),
   setIsLoadingMessages: (loading) => set({ isLoadingMessages: loading }),
   setIsLoadingDlqMessages: (loading) => set({ isLoadingDlqMessages: loading }),
+  setViewMode: (mode: "peek" | "receive") => set({ viewMode: mode }),
   resetState: () =>
     set({
       isConnected: false,
       namespaceInfo: null,
       error: null,
       isLoading: false,
-      lastConnectionString: "",
+      lastConnectionString: null,
       selectedNode: null,
       searchTerm: "",
       messages: [],
@@ -107,5 +111,6 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
       selectedMessage: null,
       deletingMessage: {},
       resendingMessage: {},
+      viewMode: "peek",
     }),
 }));

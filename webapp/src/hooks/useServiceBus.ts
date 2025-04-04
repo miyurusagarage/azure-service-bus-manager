@@ -22,6 +22,7 @@ export const useServiceBus = () => {
     deletingMessage,
     resendingMessage,
     lastConnectionString,
+    viewMode,
     setError,
     setLoading,
     setConnected,
@@ -155,8 +156,21 @@ export const useServiceBus = () => {
         throw new Error(result.error || "Failed to resend message");
       }
 
+      // In receive mode, also delete the message from DLQ
+      if (viewMode === "receive") {
+        const deleteResult = await window.electronAPI.deleteMessage(cleanQueueName, message, true);
+        if (!deleteResult.success && !deleteResult.error?.includes("Message not found")) {
+          throw new Error(deleteResult.error || "Failed to delete message from DLQ after resend");
+        }
+      }
+
       // Show success message
-      antMessage.success("Message resent successfully");
+      antMessage.success(
+        `Message ${viewMode === "receive" ? "moved" : "copied"} to main queue successfully`
+      );
+
+      // Add a small delay before refreshing to allow Service Bus to process the operations
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Refresh the DLQ messages after successful resend
       await handlePeekDlqMessages(cleanQueueName);

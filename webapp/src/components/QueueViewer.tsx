@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Tabs, Empty } from "antd";
+import { Button, Tabs, Empty, Switch } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { useServiceBusStore } from "../stores/serviceBusStore";
 import { useServiceBus } from "../hooks/useServiceBus";
@@ -18,6 +18,8 @@ export const QueueViewer: React.FC = () => {
     resendingMessage,
     selectedMessage,
     setSelectedMessage,
+    viewMode,
+    setViewMode,
   } = useServiceBusStore();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,9 +62,19 @@ export const QueueViewer: React.FC = () => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold m-0">
-          {isQueue ? `Queue: ${displayName}` : `Topic: ${displayName}`}
-        </h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-semibold m-0">
+            {isQueue ? `Queue: ${displayName}` : `Topic: ${displayName}`}
+          </h2>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={viewMode === "receive"}
+              onChange={(checked) => setViewMode(checked ? "receive" : "peek")}
+              checkedChildren="Receive"
+              unCheckedChildren="Peek"
+            />
+          </div>
+        </div>
         {isQueue && (
           <Button
             icon={<ReloadOutlined />}

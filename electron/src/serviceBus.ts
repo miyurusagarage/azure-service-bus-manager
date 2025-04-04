@@ -388,7 +388,11 @@ export class ServiceBusManager {
     }
   }
 
-  async deleteMessage(queueName: string, message: ServiceBusMessage): Promise<void> {
+  async deleteMessage(
+    queueName: string,
+    message: ServiceBusMessage,
+    isDlq: boolean = false
+  ): Promise<void> {
     if (!this.client) {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
     }
@@ -399,6 +403,7 @@ export class ServiceBusManager {
       receiver = this.client.createReceiver(queueName, {
         receiveMode: "peekLock",
         skipParsingBodyAsJson: false,
+        ...(isDlq ? { subQueueType: "deadLetter" } : {}),
       });
 
       // Receive messages until we find the one we want to delete
@@ -421,7 +426,7 @@ export class ServiceBusManager {
         if (receivedMessage.sequenceNumber?.toString() === message.sequenceNumber?.toString()) {
           // Complete (delete) the message
           await receiver.completeMessage(receivedMessage);
-          console.log("Message deleted from queue:", queueName);
+          console.log(`Message deleted from ${isDlq ? "DLQ" : "queue"}:`, queueName);
           foundMessage = true;
         } else {
           // Not the message we want, abandon it so it goes back to the queue
@@ -442,7 +447,7 @@ export class ServiceBusManager {
       if (receiver) {
         try {
           await receiver.close();
-          console.log("Closed receiver for queue:", queueName);
+          console.log(`Closed receiver for ${isDlq ? "DLQ" : "queue"}:`, queueName);
         } catch (closeError) {
           console.error("Error closing receiver:", closeError);
         }

@@ -103,15 +103,18 @@ export function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle("delete-message", async (_, queueName: string, message: ServiceBusMessage) => {
-    try {
-      await serviceBus.deleteMessage(queueName, message);
-      return { success: true };
-    } catch (error) {
-      console.error("Failed to delete message:", error);
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
+  ipcMain.handle(
+    "delete-message",
+    async (_, queueName: string, message: ServiceBusMessage, isDlq: boolean = false) => {
+      try {
+        await serviceBus.deleteMessage(queueName, message, isDlq);
+        return { success: true };
+      } catch (error) {
+        console.error("Failed to delete message:", error);
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
+      }
     }
-  });
+  );
 
   ipcMain.handle("disconnect-service-bus", () => {
     serviceBus.disconnect();

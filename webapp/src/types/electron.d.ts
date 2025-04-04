@@ -37,70 +37,31 @@ interface ElectronAPI {
     data?: string[];
     error?: string;
   }>;
+  listSubscriptions: (
+    topicName: string
+  ) => Promise<{ success: boolean; data?: string[]; error?: string }>;
   peekQueueMessages: (
     queueName: string,
-    count: number,
-    fromSequenceNumber: number
-  ) => Promise<{
-    success: boolean;
-    data?: Array<{
-      messageId?: string;
-      body: any;
-      contentType?: string;
-      correlationId?: string;
-      subject?: string;
-      sessionId?: string;
-      enqueuedTime?: string;
-      sequenceNumber?: bigint;
-    }>;
-    error?: string;
-  }>;
+    maxMessages?: number
+  ) => Promise<{ success: boolean; data?: ServiceBusMessage[]; error?: string }>;
   peekQueueDeadLetterMessages: (
     queueName: string,
-    count: number
-  ) => Promise<{
-    success: boolean;
-    data?: Array<{
-      messageId?: string;
-      body: any;
-      contentType?: string;
-      correlationId?: string;
-      subject?: string;
-      sessionId?: string;
-      enqueuedTime?: string;
-      sequenceNumber?: bigint;
-    }>;
-    error?: string;
-  }>;
+    maxMessages?: number
+  ) => Promise<{ success: boolean; data?: ServiceBusMessage[]; error?: string }>;
+  peekSubscriptionMessages: (
+    topicName: string,
+    subscriptionName: string,
+    maxMessages?: number
+  ) => Promise<{ success: boolean; data?: ServiceBusMessage[]; error?: string }>;
   sendMessage: (
     queueName: string,
-    message: {
-      messageId?: string;
-      body: any;
-      contentType?: string;
-      correlationId?: string;
-      subject?: string;
-      sessionId?: string;
-    }
-  ) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+    message: ServiceBusMessage
+  ) => Promise<{ success: boolean; error?: string }>;
   deleteMessage: (
     queueName: string,
-    message: {
-      messageId?: string;
-      body: any;
-      contentType?: string;
-      correlationId?: string;
-      subject?: string;
-      sessionId?: string;
-      sequenceNumber?: bigint;
-    }
-  ) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+    message: ServiceBusMessage,
+    isDlq?: boolean
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {
