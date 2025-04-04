@@ -68,8 +68,8 @@ export const useServiceBusStore = create<ServiceBusState>((set, get) => ({
   setSelectedNode: (node) => set({ selectedNode: node }),
   setSearchTerm: (term) => set({ searchTerm: term }),
   setSelectedMessage: (message) => set({ selectedMessage: message }),
-  setMessages: (messages) => set({ messages }),
-  setDlqMessages: (messages) => set({ dlqMessages: messages }),
+  setMessages: (messages) => set({ messages, deletingMessage: {} }),
+  setDlqMessages: (messages) => set({ dlqMessages: messages, deletingMessage: {} }),
   setDeletingMessage: (key, value) =>
     set((state) => ({
       deletingMessage: {

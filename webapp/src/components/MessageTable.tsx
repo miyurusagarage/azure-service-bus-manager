@@ -79,7 +79,10 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       key: "actions",
       width: 100,
       render: (_: any, record: ServiceBusMessage) => {
-        const messageKey = record.messageId || record.sequenceNumber?.toString() || "";
+        const messageKey =
+          record.sequenceNumber?.toString() ||
+          record.messageId ||
+          `msg-${record.body?.toString()}-${Date.now()}`;
 
         if (isDlq && onResendMessage) {
           return (

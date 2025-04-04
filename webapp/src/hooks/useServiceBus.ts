@@ -37,18 +37,29 @@ export const useServiceBus = () => {
   } = useServiceBusStore();
 
   const handleDeleteMessage = async (message: ServiceBusMessage, queueName: string) => {
-    const messageKey = message.messageId || message.sequenceNumber?.toString() || "";
+    const messageKey =
+      message.sequenceNumber?.toString() ||
+      message.messageId ||
+      `msg-${message.body?.toString()}-${Date.now()}`;
     try {
       setDeletingMessage(messageKey, true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
       const result = await window.electronAPI.deleteMessage(cleanQueueName, message);
-      if (!result.success) {
+
+      // If we get a "Message not found" error, it means the message was already deleted
+      if (!result.success && result.error?.includes("Message not found")) {
+        // Show success message since the message is gone
+        antMessage.success("Message deleted successfully");
+      } else if (!result.success) {
         throw new Error(result.error || "Failed to delete message");
+      } else {
+        // Show success message
+        antMessage.success("Message deleted successfully");
       }
 
-      // Show success message
-      antMessage.success("Message deleted successfully");
+      // Add a small delay before refreshing to allow Service Bus to process the deletion
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Refresh the messages after successful delete
       await handlePeekMessages(cleanQueueName);
@@ -130,7 +141,10 @@ export const useServiceBus = () => {
   };
 
   const handleResendMessage = async (message: ServiceBusMessage, queueName: string) => {
-    const messageKey = message.messageId || message.sequenceNumber?.toString() || "";
+    const messageKey =
+      message.sequenceNumber?.toString() ||
+      message.messageId ||
+      `msg-${message.body?.toString()}-${Date.now()}`;
     try {
       setResendingMessage(messageKey, true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
