@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Tree, Input } from "antd";
-import { FolderOutlined, ApiOutlined, MessageOutlined } from "@ant-design/icons";
 import { useServiceBusStore } from "../stores/serviceBusStore";
-import type { TreeItem } from "../types/serviceBus";
-
-interface Queue {
-  name: string;
-  activeMessageCount: number;
-  messageCount: number;
-}
+import { ServiceBusTree } from "./ServiceBusTree";
 
 export const ResizableSider: React.FC = () => {
   const [width, setWidth] = useState(300);
@@ -44,38 +36,6 @@ export const ResizableSider: React.FC = () => {
     }
   }, [isResizing]);
 
-  const getTreeData = (): TreeItem[] => {
-    if (!namespaceInfo) return [];
-
-    const filteredQueues = namespaceInfo.queues.filter((queue: Queue) =>
-      queue.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const filteredTopics = namespaceInfo.topics.filter((topic: string) =>
-      topic.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    return [
-      {
-        title: "Queues",
-        key: "queues",
-        icon: <MessageOutlined />,
-        children: filteredQueues.map((queue: Queue) => ({
-          title: `${queue.name} (${queue.activeMessageCount}/${queue.messageCount})`,
-          key: `queue-${queue.name}`,
-        })),
-      },
-      {
-        title: "Topics",
-        key: "topics",
-        icon: <ApiOutlined />,
-        children: filteredTopics.map((topic: string) => ({
-          title: topic,
-          key: `topic-${topic}`,
-        })),
-      },
-    ];
-  };
-
   return (
     <div className="relative flex h-full overflow-hidden">
       <div
@@ -83,35 +43,12 @@ export const ResizableSider: React.FC = () => {
         style={{ width: `${width}px` }}
       >
         <div className="p-4">
-          {namespaceInfo && (
-            <div className="mb-4">
-              <div className="text-sm font-medium text-gray-500">Namespace</div>
-              <div className="text-sm truncate">{namespaceInfo.name}</div>
-              <div className="text-xs text-gray-400 truncate">{namespaceInfo.endpoint}</div>
-            </div>
-          )}
-          <Input.Search
-            placeholder="Search queues and topics..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="mb-4"
-          />
-          <Tree
-            showIcon
-            defaultExpandAll
-            treeData={getTreeData()}
-            selectedKeys={selectedNode ? [selectedNode] : []}
-            onSelect={(selectedKeys) => {
-              if (selectedKeys.length > 0) {
-                setSelectedNode(selectedKeys[0] as string);
-              }
-            }}
-            style={{
-              fontSize: "14px",
-              lineHeight: "1.5",
-              padding: "0 8px",
-            }}
-            className="[&_.ant-tree-switcher]:mr-0 [&_.ant-tree-node-content-wrapper]:pl-1 [&_.ant-tree-switcher]:w-5 [&_.ant-tree-switcher:before]:w-5"
+          <ServiceBusTree
+            namespaceInfo={namespaceInfo}
+            searchTerm={searchTerm}
+            onSearchChange={(value) => setSearchTerm(value)}
+            selectedNode={selectedNode}
+            onNodeSelect={(node) => setSelectedNode(node)}
           />
         </div>
       </div>

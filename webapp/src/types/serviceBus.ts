@@ -25,6 +25,7 @@ export interface QueueInfo {
   name: string;
   activeMessageCount: number;
   messageCount: number;
+  deadLetterCount: number;
 }
 
 export interface TreeItem {
