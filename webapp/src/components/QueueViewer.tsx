@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Button, Tabs, Empty, Switch } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SendOutlined } from "@ant-design/icons";
 import { useServiceBusStore } from "../stores/serviceBusStore";
 import { useServiceBus } from "../hooks/useServiceBus";
 import { MessageSearch } from "./MessageSearch";
 import { MessageList } from "./MessageList";
 import { useMessageFilter } from "../hooks/useMessageFilter";
+import { SendMessageModal } from "./SendMessageModal";
 
 export const QueueViewer: React.FC = () => {
   const {
@@ -23,8 +24,14 @@ export const QueueViewer: React.FC = () => {
   } = useServiceBusStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { handlePeekMessages, handlePeekDlqMessages, handleDeleteMessage, handleResendMessage } =
-    useServiceBus();
+  const [sendMessageModalVisible, setSendMessageModalVisible] = useState(false);
+  const {
+    handlePeekMessages,
+    handlePeekDlqMessages,
+    handleDeleteMessage,
+    handleResendMessage,
+    handleSendMessage,
+  } = useServiceBus();
 
   const filteredMessages = useMessageFilter(messages, searchTerm);
   const filteredDlqMessages = useMessageFilter(dlqMessages, searchTerm);
@@ -76,13 +83,22 @@ export const QueueViewer: React.FC = () => {
           </div>
         </div>
         {isQueue && (
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh}
-            loading={isLoadingMessages || isLoadingDlqMessages}
-          >
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={() => setSendMessageModalVisible(true)}
+            >
+              Send Message
+            </Button>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleRefresh}
+              loading={isLoadingMessages || isLoadingDlqMessages}
+            >
+              Refresh
+            </Button>
+          </div>
         )}
       </div>
       {isQueue ? (
@@ -151,6 +167,12 @@ export const QueueViewer: React.FC = () => {
       ) : (
         <Empty description="Topic message viewer coming soon" />
       )}
+      <SendMessageModal
+        visible={sendMessageModalVisible}
+        onClose={() => setSendMessageModalVisible(false)}
+        onSend={(message) => handleSendMessage(message, selectedNode)}
+        queueName={selectedNode}
+      />
     </div>
   );
 };

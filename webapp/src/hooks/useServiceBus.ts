@@ -286,6 +286,33 @@ export const useServiceBus = () => {
     }
   };
 
+  const handleSendMessage = async (message: ServiceBusMessage, queueName: string) => {
+    try {
+      const cleanQueueName = queueName.replace(/^queue-/, "");
+
+      const result = await window.electronAPI.sendMessage(cleanQueueName, message);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send message");
+      }
+
+      // Show success message
+      antMessage.success("Message sent successfully");
+
+      // Add a small delay before refreshing to allow Service Bus to process the send
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Refresh the messages and queue info after successful send
+      await Promise.all([handlePeekMessages(cleanQueueName), refreshQueueInfo()]);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      // Show error message
+      antMessage.error(
+        "Failed to send message: " + (error instanceof Error ? error.message : String(error))
+      );
+      throw error;
+    }
+  };
+
   return {
     isConnected,
     namespaceInfo,
@@ -303,5 +330,6 @@ export const useServiceBus = () => {
     handlePeekDlqMessages,
     handleDeleteMessage,
     handleResendMessage,
+    handleSendMessage,
   };
 };
