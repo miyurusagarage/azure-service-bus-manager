@@ -29,7 +29,7 @@ interface ElectronAPI {
   disconnectServiceBus: () => Promise<void>;
   listQueues: () => Promise<{
     success: boolean;
-    data?: Array<{ name: string; activeMessageCount: number; messageCount: number }>;
+    data?: QueueInfo[];
     error?: string;
   }>;
   listTopics: () => Promise<{

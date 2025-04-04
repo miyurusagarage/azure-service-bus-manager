@@ -37,6 +37,22 @@ export const useServiceBus = () => {
     resetState,
   } = useServiceBusStore();
 
+  const refreshQueueInfo = async () => {
+    if (!isConnected || !namespaceInfo) return;
+
+    try {
+      const queuesResult = await window.electronAPI.listQueues();
+      if (queuesResult.success && queuesResult.data) {
+        setNamespaceInfo({
+          ...namespaceInfo,
+          queues: queuesResult.data,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to refresh queue info:", error);
+    }
+  };
+
   const handleDeleteMessage = async (message: ServiceBusMessage, queueName: string) => {
     const messageKey =
       message.sequenceNumber?.toString() ||
@@ -62,8 +78,8 @@ export const useServiceBus = () => {
       // Add a small delay before refreshing to allow Service Bus to process the deletion
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Refresh the messages after successful delete
-      await handlePeekMessages(cleanQueueName);
+      // Refresh the messages and queue info after successful delete
+      await Promise.all([handlePeekMessages(cleanQueueName), refreshQueueInfo()]);
     } catch (error) {
       console.error("Failed to delete message:", error);
       // Show error message
@@ -80,12 +96,12 @@ export const useServiceBus = () => {
       setIsLoadingMessages(true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
-      const result = await window.electronAPI.peekQueueMessages(cleanQueueName, 10, 0);
+      const result = await window.electronAPI.peekQueueMessages(cleanQueueName, 10);
 
       if (!result.success) {
         if (result.error?.includes("connection") && lastConnectionString) {
           await window.electronAPI.connectServiceBus(lastConnectionString);
-          const retryResult = await window.electronAPI.peekQueueMessages(cleanQueueName, 10, 0);
+          const retryResult = await window.electronAPI.peekQueueMessages(cleanQueueName, 10);
           if (!retryResult.success) {
             throw new Error(retryResult.error || "Failed to peek messages after reconnection");
           }
@@ -172,8 +188,8 @@ export const useServiceBus = () => {
       // Add a small delay before refreshing to allow Service Bus to process the operations
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Refresh the DLQ messages after successful resend
-      await handlePeekDlqMessages(cleanQueueName);
+      // Refresh both the DLQ messages and queue info after successful resend
+      await Promise.all([handlePeekDlqMessages(cleanQueueName), refreshQueueInfo()]);
     } catch (error) {
       console.error("Failed to resend message:", error);
       // Show error message
