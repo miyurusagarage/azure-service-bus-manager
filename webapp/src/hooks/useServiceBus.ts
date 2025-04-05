@@ -59,7 +59,11 @@ export const useServiceBus = () => {
     }
   };
 
-  const handleDeleteMessage = async (message: ServiceBusMessage, queueName: string) => {
+  const handleDeleteMessage = async (
+    message: ServiceBusMessage,
+    queueName: string,
+    isDlq: boolean = false
+  ) => {
     const messageKey = message.sequenceNumber?.toString();
     if (!messageKey) {
       console.error("Message has no sequence number:", message);
@@ -70,7 +74,7 @@ export const useServiceBus = () => {
       setDeletingMessage(messageKey, true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
-      const result = await window.electronAPI.deleteMessage(cleanQueueName, message);
+      const result = await window.electronAPI.deleteMessage(cleanQueueName, message, isDlq);
 
       // If we get a "Message not found" error, it means the message was already deleted
       if (!result.success && result.error?.includes("Message not found")) {
@@ -87,7 +91,10 @@ export const useServiceBus = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Refresh the messages and queue info after successful delete
-      await Promise.all([handlePeekMessages(cleanQueueName), refreshQueueInfo()]);
+      await Promise.all([
+        isDlq ? handlePeekDlqMessages(cleanQueueName) : handlePeekMessages(cleanQueueName),
+        refreshQueueInfo(),
+      ]);
     } catch (error) {
       console.error("Failed to delete message:", error);
       // Show error message

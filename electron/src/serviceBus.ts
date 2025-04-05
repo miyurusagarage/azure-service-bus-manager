@@ -414,25 +414,47 @@ export class ServiceBusManager {
       // Add a small delay to ensure the receiver is ready
       await delay(100);
 
-      // Get all messages in the queue
-      const messages = await receiver.receiveMessages(32, { maxWaitTimeInMs: 5000 });
-      console.log(`Received ${messages.length} messages to find target`);
+      // First peek the message to confirm it exists
+      const peekedMessages = await receiver.peekMessages(1, {
+        fromSequenceNumber: Long.fromString(message.sequenceNumber.toString()),
+      });
 
-      // Find our target message
-      const targetMessage = messages.find(
-        (msg) => msg.sequenceNumber?.toString() === message.sequenceNumber?.toString()
-      );
+      if (peekedMessages.length === 0) {
+        throw new Error(
+          `Message with sequence number ${message.sequenceNumber.toString()} not found`
+        );
+      }
 
-      // Abandon all messages that aren't our target
-      await Promise.all(
-        messages
-          .filter((msg) => msg.sequenceNumber?.toString() !== message.sequenceNumber?.toString())
-          .map((msg) => receiver!.abandonMessage(msg))
-      );
+      // Now receive messages until we find our target
+      let targetMessage = null;
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      while (!targetMessage && attempts < maxAttempts) {
+        const messages = await receiver.receiveMessages(5, { maxWaitTimeInMs: 2000 });
+
+        // Find our target message
+        targetMessage = messages.find(
+          (msg) => msg.sequenceNumber?.toString() === message.sequenceNumber?.toString()
+        );
+
+        // Abandon messages that aren't our target
+        await Promise.all(
+          messages
+            .filter((msg) => msg.sequenceNumber?.toString() !== message.sequenceNumber?.toString())
+            .map((msg) => receiver!.abandonMessage(msg))
+        );
+
+        if (targetMessage) {
+          break;
+        }
+
+        attempts++;
+      }
 
       if (!targetMessage) {
         throw new Error(
-          `Message with sequence number ${message.sequenceNumber.toString()} not found in first 32 messages`
+          `Message with sequence number ${message.sequenceNumber.toString()} could not be received after ${maxAttempts} attempts`
         );
       }
 
