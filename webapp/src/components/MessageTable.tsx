@@ -12,6 +12,12 @@ interface MessageTableProps {
   resendingMessage?: { [key: string]: boolean };
   queueName: string;
   isDlq?: boolean;
+  pagination: {
+    current: number;
+    pageSize: number;
+    total: number;
+  };
+  onPaginationChange: (page: number, pageSize: number) => void;
 }
 
 export const MessageTable: React.FC<MessageTableProps> = ({
@@ -23,6 +29,8 @@ export const MessageTable: React.FC<MessageTableProps> = ({
   resendingMessage = {},
   queueName,
   isDlq = false,
+  pagination,
+  onPaginationChange,
 }) => {
   const columns = [
     {
@@ -103,7 +111,6 @@ export const MessageTable: React.FC<MessageTableProps> = ({
         return (
           <Button
             type="link"
-            danger
             icon={<DeleteOutlined />}
             loading={deletingMessage[messageKey]}
             onClick={(e) => {
@@ -119,16 +126,24 @@ export const MessageTable: React.FC<MessageTableProps> = ({
   ];
 
   return (
-    <div className="overflow-auto">
-      <Table
-        dataSource={messages.map((msg, index) => ({
-          ...msg,
-          key: msg.messageId || index,
-        }))}
-        columns={columns}
-        scroll={{ x: true }}
-        pagination={false}
-      />
-    </div>
+    <Table
+      dataSource={messages}
+      columns={columns}
+      rowKey={(record) =>
+        record.sequenceNumber?.toString() ||
+        record.messageId ||
+        `msg-${record.body?.toString()}-${Date.now()}`
+      }
+      pagination={{
+        ...pagination,
+        showSizeChanger: true,
+        pageSizeOptions: ["10", "20", "50", "100"],
+        onChange: onPaginationChange,
+      }}
+      loading={false}
+      locale={{
+        emptyText: <Empty description="No messages found" />,
+      }}
+    />
   );
 };

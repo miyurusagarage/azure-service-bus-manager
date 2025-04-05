@@ -10,7 +10,7 @@ import { useServiceBusStore } from "../stores/serviceBusStore";
 const { Content } = Layout;
 
 export const MainPage: React.FC = () => {
-  const { isConnected, selectedMessage, setSelectedMessage } = useServiceBusStore();
+  const { isConnected, selectedMessage, setSelectedMessage, selectedNode } = useServiceBusStore();
 
   if (!isConnected) {
     return <ConnectionPrompt />;
@@ -22,7 +22,7 @@ export const MainPage: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         <ResizableSider />
         <Content className="bg-gray-50 p-6 overflow-auto flex-1">
-          <QueueViewer />
+          <QueueViewer selectedNode={selectedNode} />
         </Content>
       </div>
       <MessageDetailsModal

@@ -23,6 +23,7 @@ export const useServiceBus = () => {
     resendingMessage,
     lastConnectionString,
     viewMode,
+    setViewMode,
     setError,
     setLoading,
     setConnected,
@@ -36,6 +37,11 @@ export const useServiceBus = () => {
     setIsLoadingDlqMessages,
     resetState,
   } = useServiceBusStore();
+
+  const handleViewMessage = (message: ServiceBusMessage) => {
+    // For now, we'll just show the message in a notification
+    antMessage.info(JSON.stringify(message, null, 2));
+  };
 
   const refreshQueueInfo = async () => {
     if (!isConnected || !namespaceInfo) return;
@@ -91,67 +97,45 @@ export const useServiceBus = () => {
     }
   };
 
-  const handlePeekMessages = async (queueName: string) => {
+  const handlePeekMessages = async (queueName: string, pageSize: number = 10) => {
     try {
       setIsLoadingMessages(true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
-      const result = await window.electronAPI.peekQueueMessages(cleanQueueName, 10);
+      const result = await window.electronAPI.peekQueueMessages(cleanQueueName, pageSize);
 
       if (!result.success) {
-        if (result.error?.includes("connection") && lastConnectionString) {
-          await window.electronAPI.connectServiceBus(lastConnectionString);
-          const retryResult = await window.electronAPI.peekQueueMessages(cleanQueueName, 10);
-          if (!retryResult.success) {
-            throw new Error(retryResult.error || "Failed to peek messages after reconnection");
-          }
-          if (retryResult.data) {
-            setMessages(
-              retryResult.data.map((msg) => ({
-                ...msg,
-                enqueuedTime: msg.enqueuedTime ? new Date(msg.enqueuedTime) : undefined,
-              }))
-            );
-            return;
-          }
-        }
         throw new Error(result.error || "Failed to peek messages");
       }
 
-      setMessages(
-        (result.data || []).map((msg) => ({
-          ...msg,
-          enqueuedTime: msg.enqueuedTime ? new Date(msg.enqueuedTime) : undefined,
-        }))
-      );
+      setMessages(result.data || []);
     } catch (error) {
       console.error("Failed to peek messages:", error);
-      setMessages([]);
+      setError({
+        message: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setIsLoadingMessages(false);
     }
   };
 
-  const handlePeekDlqMessages = async (queueName: string) => {
+  const handlePeekDlqMessages = async (queueName: string, pageSize: number = 10) => {
     try {
       setIsLoadingDlqMessages(true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
 
-      const result = await window.electronAPI.peekQueueDeadLetterMessages(cleanQueueName, 10);
+      const result = await window.electronAPI.peekQueueDeadLetterMessages(cleanQueueName, pageSize);
 
       if (!result.success) {
         throw new Error(result.error || "Failed to peek DLQ messages");
       }
 
-      setDlqMessages(
-        (result.data || []).map((msg) => ({
-          ...msg,
-          enqueuedTime: msg.enqueuedTime ? new Date(msg.enqueuedTime) : undefined,
-        }))
-      );
+      setDlqMessages(result.data || []);
     } catch (error) {
       console.error("Failed to peek DLQ messages:", error);
-      setDlqMessages([]);
+      setError({
+        message: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setIsLoadingDlqMessages(false);
     }
@@ -324,12 +308,15 @@ export const useServiceBus = () => {
     isLoadingDlqMessages,
     deletingMessage,
     resendingMessage,
-    handleConnect,
-    handleDisconnect,
+    viewMode,
+    setViewMode,
     handlePeekMessages,
     handlePeekDlqMessages,
     handleDeleteMessage,
     handleResendMessage,
+    handleViewMessage,
     handleSendMessage,
+    handleConnect,
+    handleDisconnect,
   };
 };

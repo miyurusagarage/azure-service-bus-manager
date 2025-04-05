@@ -1,78 +1,81 @@
 import React, { useEffect, useState } from "react";
-import { Button, Tabs, Empty, Switch } from "antd";
-import { ReloadOutlined, SendOutlined } from "@ant-design/icons";
-import { useServiceBusStore } from "../stores/serviceBusStore";
+import { Button, Tabs, message as antMessage, Switch, Card } from "antd";
+import { ReloadOutlined, PlusOutlined } from "@ant-design/icons";
 import { useServiceBus } from "../hooks/useServiceBus";
-import { MessageSearch } from "./MessageSearch";
-import { MessageList } from "./MessageList";
-import { useMessageFilter } from "../hooks/useMessageFilter";
 import { SendMessageModal } from "./SendMessageModal";
+import { MessageTable } from "./MessageTable";
+import type { ServiceBusMessage } from "../types/serviceBus";
 
-export const QueueViewer: React.FC = () => {
+interface QueueViewerProps {
+  selectedNode: string | null;
+}
+
+export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
   const {
-    selectedNode,
     messages,
     dlqMessages,
     isLoadingMessages,
     isLoadingDlqMessages,
     deletingMessage,
     resendingMessage,
-    selectedMessage,
-    setSelectedMessage,
-    viewMode,
-    setViewMode,
-  } = useServiceBusStore();
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sendMessageModalVisible, setSendMessageModalVisible] = useState(false);
-  const {
     handlePeekMessages,
     handlePeekDlqMessages,
     handleDeleteMessage,
     handleResendMessage,
     handleSendMessage,
+    viewMode,
+    setViewMode,
   } = useServiceBus();
 
-  const filteredMessages = useMessageFilter(messages, searchTerm);
-  const filteredDlqMessages = useMessageFilter(dlqMessages, searchTerm);
+  const [activeTab, setActiveTab] = useState<"active" | "dlq">("active");
+  const [sendMessageModalVisible, setSendMessageModalVisible] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  const queueName = selectedNode?.replace("queue-", "") || "";
 
   useEffect(() => {
-    if (selectedNode?.startsWith("queue-")) {
-      const queueName = selectedNode.replace("queue-", "");
-      handlePeekMessages(queueName);
-      handlePeekDlqMessages(queueName);
+    if (queueName) {
+      handlePeekMessages(queueName, pagination.pageSize);
     }
-  }, [selectedNode]);
+  }, [queueName, pagination.pageSize]);
+
+  const handleTabChange = (key: string) => {
+    setActiveTab(key as "active" | "dlq");
+    if (key === "dlq") {
+      handlePeekDlqMessages(queueName, pagination.pageSize);
+    } else {
+      handlePeekMessages(queueName, pagination.pageSize);
+    }
+  };
+
+  const handlePaginationChange = (page: number, pageSize: number) => {
+    setPagination((prev) => ({
+      ...prev,
+      current: page,
+      pageSize: pageSize || prev.pageSize,
+      total: activeTab === "active" ? messages.length : dlqMessages.length,
+    }));
+  };
+
+  const handleSend = (message: ServiceBusMessage) => {
+    return handleSendMessage(message, queueName);
+  };
 
   if (!selectedNode) {
-    return <Empty description="Select a queue or topic to view messages" />;
+    return null;
   }
 
-  const isQueue = selectedNode.startsWith("queue-");
-  const displayName = selectedNode.replace(isQueue ? "queue-" : "topic-", "");
-
-  const handleRefresh = () => {
-    if (selectedNode.startsWith("queue-")) {
-      const queueName = selectedNode.replace("queue-", "");
-      handlePeekMessages(queueName);
-      handlePeekDlqMessages(queueName);
-    }
-  };
-
-  const handleDlqTabChange = () => {
-    if (selectedNode.startsWith("queue-")) {
-      const queueName = selectedNode.replace("queue-", "");
-      handlePeekDlqMessages(queueName);
-    }
-  };
+  const displayName = selectedNode.replace("queue-", "");
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
+    <Card className="h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold m-0">
-            {isQueue ? `Queue: ${displayName}` : `Topic: ${displayName}`}
-          </h2>
+          <h2 className="text-xl font-semibold">Queue: {displayName}</h2>
           <div className="flex items-center gap-2">
             <Switch
               checked={viewMode === "receive"}
@@ -82,97 +85,94 @@ export const QueueViewer: React.FC = () => {
             />
           </div>
         </div>
-        {isQueue && (
-          <div className="flex items-center gap-2">
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={() => setSendMessageModalVisible(true)}
-            >
-              Send Message
-            </Button>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-              loading={isLoadingMessages || isLoadingDlqMessages}
-            >
-              Refresh
-            </Button>
-          </div>
-        )}
-      </div>
-      {isQueue ? (
-        <Tabs
-          defaultActiveKey="messages"
-          onChange={(activeKey) => {
-            if (selectedNode?.startsWith("queue-")) {
-              const queueName = selectedNode.replace("queue-", "");
-              if (activeKey === "dlq") {
-                handlePeekDlqMessages(queueName);
+        <div className="flex space-x-2">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setSendMessageModalVisible(true)}
+          >
+            Send Message
+          </Button>
+          <Button
+            type="default"
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              if (activeTab === "dlq") {
+                handlePeekDlqMessages(queueName, pagination.pageSize);
               } else {
-                handlePeekMessages(queueName);
+                handlePeekMessages(queueName, pagination.pageSize);
               }
-            }
-          }}
+            }}
+            loading={activeTab === "dlq" ? isLoadingDlqMessages : isLoadingMessages}
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <Tabs
+          activeKey={activeTab}
+          onChange={handleTabChange}
+          className="h-full flex flex-col"
           items={[
             {
-              key: "messages",
-              label: "Messages",
+              key: "active",
+              label: "Active Messages",
               children: (
-                <>
-                  <MessageSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-                  <MessageList
-                    messages={filteredMessages}
-                    isLoading={isLoadingMessages}
-                    searchTerm={searchTerm}
-                    onViewMessage={setSelectedMessage}
+                <div className="flex-1 min-h-0 overflow-auto">
+                  <MessageTable
+                    messages={messages}
+                    onViewMessage={(message) => {
+                      antMessage.info(JSON.stringify(message, null, 2));
+                    }}
                     onDeleteMessage={handleDeleteMessage}
                     deletingMessage={deletingMessage}
-                    queueName={selectedNode}
-                    emptyMessage={
-                      searchTerm ? "No messages match your search" : "No messages found in queue"
-                    }
+                    queueName={queueName}
+                    pagination={{
+                      ...pagination,
+                      total: messages.length,
+                    }}
+                    onPaginationChange={handlePaginationChange}
                   />
-                </>
+                </div>
               ),
             },
             {
               key: "dlq",
               label: "Dead Letter Queue",
               children: (
-                <>
-                  <MessageSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-                  <MessageList
-                    messages={filteredDlqMessages}
-                    isLoading={isLoadingDlqMessages}
-                    searchTerm={searchTerm}
-                    onViewMessage={setSelectedMessage}
+                <div className="flex-1 min-h-0 overflow-auto">
+                  <MessageTable
+                    messages={dlqMessages}
+                    onViewMessage={(message) => {
+                      antMessage.info(JSON.stringify(message, null, 2));
+                    }}
                     onDeleteMessage={handleDeleteMessage}
                     onResendMessage={handleResendMessage}
                     deletingMessage={deletingMessage}
                     resendingMessage={resendingMessage}
-                    queueName={selectedNode}
-                    emptyMessage={
-                      searchTerm
-                        ? "No messages match your search"
-                        : "No messages found in dead letter queue"
-                    }
+                    queueName={queueName}
                     isDlq={true}
+                    pagination={{
+                      ...pagination,
+                      total: dlqMessages.length,
+                    }}
+                    onPaginationChange={handlePaginationChange}
                   />
-                </>
+                </div>
               ),
             },
           ]}
         />
-      ) : (
-        <Empty description="Topic message viewer coming soon" />
-      )}
+      </div>
+
       <SendMessageModal
         visible={sendMessageModalVisible}
         onClose={() => setSendMessageModalVisible(false)}
-        onSend={(message) => handleSendMessage(message, selectedNode)}
-        queueName={selectedNode}
+        onSend={handleSend}
+        queueName={queueName}
       />
-    </div>
+    </Card>
   );
 };
