@@ -148,6 +148,7 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
                       total: filteredMessages.length,
                     }}
                     onPaginationChange={handlePaginationChange}
+                    isLoading={isLoadingMessages}
                   />
                 </div>
               </div>
@@ -173,6 +174,7 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
                       total: filteredDlqMessages.length,
                     }}
                     onPaginationChange={handlePaginationChange}
+                    isLoading={isLoadingDlqMessages}
                   />
                 </div>
               </div>

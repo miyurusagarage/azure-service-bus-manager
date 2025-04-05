@@ -18,6 +18,7 @@ interface MessageTableProps {
     total: number;
   };
   onPaginationChange: (page: number, pageSize: number) => void;
+  isLoading?: boolean;
 }
 
 export const MessageTable: React.FC<MessageTableProps> = ({
@@ -31,6 +32,7 @@ export const MessageTable: React.FC<MessageTableProps> = ({
   isDlq = false,
   pagination,
   onPaginationChange,
+  isLoading = false,
 }) => {
   const columns = [
     {
@@ -145,9 +147,9 @@ export const MessageTable: React.FC<MessageTableProps> = ({
           onChange: onPaginationChange,
           position: ["bottomCenter"],
         }}
-        loading={false}
+        loading={isLoading}
         locale={{
-          emptyText: <Empty description="No messages found" />,
+          emptyText: isLoading ? null : <Empty description="No messages found" />,
         }}
         scroll={{ y: "calc(100vh - 420px)" }}
         size="middle"
