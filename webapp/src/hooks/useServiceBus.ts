@@ -60,10 +60,12 @@ export const useServiceBus = () => {
   };
 
   const handleDeleteMessage = async (message: ServiceBusMessage, queueName: string) => {
-    const messageKey =
-      message.sequenceNumber?.toString() ||
-      message.messageId ||
-      `msg-${message.body?.toString()}-${Date.now()}`;
+    const messageKey = message.sequenceNumber?.toString();
+    if (!messageKey) {
+      console.error("Message has no sequence number:", message);
+      return;
+    }
+
     try {
       setDeletingMessage(messageKey, true);
       const cleanQueueName = queueName.replace(/^queue-/, "");
@@ -142,10 +144,12 @@ export const useServiceBus = () => {
   };
 
   const handleResendMessage = async (message: ServiceBusMessage, queueName: string) => {
-    const messageKey =
-      message.sequenceNumber?.toString() ||
-      message.messageId ||
-      `msg-${message.body?.toString()}-${Date.now()}`;
+    const messageKey = message.sequenceNumber?.toString();
+    if (!messageKey) {
+      console.error("Message has no sequence number:", message);
+      return;
+    }
+
     try {
       setResendingMessage(messageKey, true);
       const cleanQueueName = queueName.replace(/^queue-/, "");

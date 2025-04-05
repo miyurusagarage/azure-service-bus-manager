@@ -86,10 +86,11 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       key: "actions",
       width: isDlq ? 120 : 100,
       render: (_: any, record: ServiceBusMessage) => {
-        const messageKey =
-          record.sequenceNumber?.toString() ||
-          record.messageId ||
-          `msg-${record.body?.toString()}-${Date.now()}`;
+        const messageKey = record.sequenceNumber?.toString();
+        if (!messageKey) {
+          console.error("Message has no sequence number:", record);
+          return null;
+        }
 
         if (isDlq && onResendMessage) {
           return (
@@ -129,11 +130,14 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       <Table
         dataSource={messages}
         columns={columns}
-        rowKey={(record) =>
-          record.sequenceNumber?.toString() ||
-          record.messageId ||
-          `msg-${record.body?.toString()}-${Date.now()}`
-        }
+        rowKey={(record) => {
+          const key = record.sequenceNumber?.toString();
+          if (!key) {
+            console.error("Message has no sequence number:", record);
+            return Math.random().toString();
+          }
+          return key;
+        }}
         pagination={{
           ...pagination,
           showSizeChanger: true,

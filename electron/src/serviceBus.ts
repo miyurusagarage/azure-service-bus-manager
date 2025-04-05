@@ -4,6 +4,7 @@ import {
   ServiceBusReceivedMessage,
   QueueRuntimeProperties,
   delay,
+  ServiceBusReceiver,
 } from "@azure/service-bus";
 import Long from "long";
 
@@ -397,7 +398,11 @@ export class ServiceBusManager {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
     }
 
-    let receiver = null;
+    if (!message.sequenceNumber) {
+      throw new Error(JSON.stringify({ message: "Message has no sequence number" }));
+    }
+
+    let receiver: ServiceBusReceiver | null = null;
     try {
       // Create a receiver in peekLock mode
       receiver = this.client.createReceiver(queueName, {
@@ -406,39 +411,40 @@ export class ServiceBusManager {
         ...(isDlq ? { subQueueType: "deadLetter" } : {}),
       });
 
-      // Receive messages until we find the one we want to delete
-      let foundMessage = false;
-      let attempts = 0;
-      const maxAttempts = 10; // Limit the number of attempts to avoid infinite loops
+      // Add a small delay to ensure the receiver is ready
+      await delay(100);
 
-      while (!foundMessage && attempts < maxAttempts) {
-        const receivedMessages = await receiver.receiveMessages(1, {
-          maxWaitTimeInMs: 5000,
-        });
+      // Get all messages in the queue
+      const messages = await receiver.receiveMessages(32, { maxWaitTimeInMs: 5000 });
+      console.log(`Received ${messages.length} messages to find target`);
 
-        if (receivedMessages.length === 0) {
-          break; // No more messages to receive
-        }
+      // Find our target message
+      const targetMessage = messages.find(
+        (msg) => msg.sequenceNumber?.toString() === message.sequenceNumber?.toString()
+      );
 
-        const receivedMessage = receivedMessages[0];
+      // Abandon all messages that aren't our target
+      await Promise.all(
+        messages
+          .filter((msg) => msg.sequenceNumber?.toString() !== message.sequenceNumber?.toString())
+          .map((msg) => receiver!.abandonMessage(msg))
+      );
 
-        // Check if this is the message we want to delete
-        if (receivedMessage.sequenceNumber?.toString() === message.sequenceNumber?.toString()) {
-          // Complete (delete) the message
-          await receiver.completeMessage(receivedMessage);
-          console.log(`Message deleted from ${isDlq ? "DLQ" : "queue"}:`, queueName);
-          foundMessage = true;
-        } else {
-          // Not the message we want, abandon it so it goes back to the queue
-          await receiver.abandonMessage(receivedMessage);
-        }
-
-        attempts++;
+      if (!targetMessage) {
+        throw new Error(
+          `Message with sequence number ${message.sequenceNumber.toString()} not found in first 32 messages`
+        );
       }
 
-      if (!foundMessage) {
-        throw new Error("Message not found after multiple attempts");
-      }
+      // Complete (delete) the specific message
+      await receiver.completeMessage(targetMessage);
+
+      console.log(
+        `Message deleted from ${isDlq ? "DLQ" : "queue"}:`,
+        queueName,
+        "sequence number:",
+        message.sequenceNumber?.toString()
+      );
     } catch (error) {
       console.error("Error deleting message:", error);
       const serviceBusError = getServiceBusErrorMessage(error);
