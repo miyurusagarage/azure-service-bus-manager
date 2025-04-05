@@ -3,6 +3,8 @@ import { Modal, Input, Button, Alert } from "antd";
 import { ApiOutlined } from "@ant-design/icons";
 import type { ServiceBusError } from "../types/serviceBus";
 
+const { TextArea } = Input;
+
 interface ConnectionModalProps {
   visible: boolean;
   onClose: () => void;
@@ -36,15 +38,18 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
       onCancel={onClose}
       footer={null}
       width={600}
+      centered={true}
     >
       <div className="space-y-4">
         <div>
           <div className="text-sm text-gray-500 mb-1">Connection String</div>
-          <Input.Password
+          <TextArea
             value={connectionString}
             onChange={(e) => setConnectionString(e.target.value)}
             placeholder="Enter your Azure Service Bus connection string"
             className="w-full"
+            rows={4}
+            style={{ fontFamily: "monospace" }}
           />
         </div>
         {error && (
