@@ -37,27 +37,28 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       title: "Seq No.",
       dataIndex: "sequenceNumber",
       key: "sequenceNumber",
-      width: 100,
+      width: 80,
       render: (sequenceNumber: bigint) => sequenceNumber?.toString() || "N/A",
     },
     {
       title: "Message ID",
       dataIndex: "messageId",
       key: "messageId",
-      width: 220,
+      width: 280,
+      ellipsis: true,
     },
     {
       title: "Content Type",
       dataIndex: "contentType",
       key: "contentType",
-      width: 120,
+      width: 100,
       render: (contentType: string) => contentType?.replace("application/", "") || "N/A",
     },
     {
       title: "Enqueued Time",
       dataIndex: "enqueuedTime",
       key: "enqueuedTime",
-      width: 220,
+      width: 180,
       render: (enqueuedTime: Date) => {
         if (!enqueuedTime) return "N/A";
         return enqueuedTime.toLocaleString();
@@ -67,6 +68,7 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       title: "Body",
       dataIndex: "body",
       key: "body",
+      width: 100,
       render: (body: any) => (
         <Button
           type="link"
@@ -139,11 +141,14 @@ export const MessageTable: React.FC<MessageTableProps> = ({
         showSizeChanger: true,
         pageSizeOptions: ["10", "20", "50", "100"],
         onChange: onPaginationChange,
+        position: ["bottomCenter"],
       }}
       loading={false}
       locale={{
         emptyText: <Empty description="No messages found" />,
       }}
+      scroll={{ y: "calc(100vh - 380px)" }}
+      size="middle"
     />
   );
 };
