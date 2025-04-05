@@ -84,7 +84,7 @@ export const MessageTable: React.FC<MessageTableProps> = ({
     {
       title: "Actions",
       key: "actions",
-      width: 100,
+      width: isDlq ? 120 : 100,
       render: (_: any, record: ServiceBusMessage) => {
         const messageKey =
           record.sequenceNumber?.toString() ||
@@ -125,28 +125,32 @@ export const MessageTable: React.FC<MessageTableProps> = ({
   ];
 
   return (
-    <Table
-      dataSource={messages}
-      columns={columns}
-      rowKey={(record) =>
-        record.sequenceNumber?.toString() ||
-        record.messageId ||
-        `msg-${record.body?.toString()}-${Date.now()}`
-      }
-      pagination={{
-        ...pagination,
-        showSizeChanger: true,
-        pageSizeOptions: ["10", "20", "50", "100"],
-        onChange: onPaginationChange,
-        position: ["bottomCenter"],
-      }}
-      loading={false}
-      locale={{
-        emptyText: <Empty description="No messages found" />,
-      }}
-      scroll={{ y: "calc(100vh - 420px)", x: "100%" }}
-      size="middle"
-      className="flex-1 min-h-0"
-    />
+    <div className="overflow-x-hidden">
+      <Table
+        dataSource={messages}
+        columns={columns}
+        rowKey={(record) =>
+          record.sequenceNumber?.toString() ||
+          record.messageId ||
+          `msg-${record.body?.toString()}-${Date.now()}`
+        }
+        pagination={{
+          ...pagination,
+          showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100"],
+          onChange: onPaginationChange,
+          position: ["bottomCenter"],
+        }}
+        loading={false}
+        locale={{
+          emptyText: <Empty description="No messages found" />,
+        }}
+        scroll={{ y: "calc(100vh - 420px)" }}
+        size="middle"
+        className="flex-1 min-h-0"
+        tableLayout="fixed"
+        style={{ width: "100%" }}
+      />
+    </div>
   );
 };

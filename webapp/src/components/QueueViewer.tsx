@@ -129,14 +129,14 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
       <Tabs
         activeKey={activeTab}
         onChange={handleTabChange}
-        className="flex-1 min-h-0 flex flex-col"
+        className="flex-1 min-h-0 flex flex-col overflow-hidden"
         items={[
           {
             key: "active",
             label: "Active Messages",
             children: (
-              <div className="flex-1 min-h-0 flex flex-col">
-                <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden">
                   <MessageTable
                     messages={filteredMessages}
                     onViewMessage={(message) => setSelectedMessage(message)}
@@ -157,8 +157,8 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
             key: "dlq",
             label: "Dead Letter Queue",
             children: (
-              <div className="flex-1 min-h-0 flex flex-col">
-                <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden">
                   <MessageTable
                     messages={filteredDlqMessages}
                     onViewMessage={(message) => setSelectedMessage(message)}
