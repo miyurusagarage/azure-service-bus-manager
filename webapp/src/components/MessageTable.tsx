@@ -69,15 +69,12 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       dataIndex: "body",
       key: "body",
       width: 100,
-      render: (body: any) => (
+      render: (body: any, record: ServiceBusMessage) => (
         <Button
           type="link"
           onClick={(e) => {
             e.stopPropagation();
-            const message = messages.find((m) => m.body === body);
-            if (message) {
-              onViewMessage(message);
-            }
+            onViewMessage(record);
           }}
         >
           View Body
@@ -147,8 +144,9 @@ export const MessageTable: React.FC<MessageTableProps> = ({
       locale={{
         emptyText: <Empty description="No messages found" />,
       }}
-      scroll={{ y: "calc(100vh - 380px)" }}
+      scroll={{ y: "calc(100vh - 420px)", x: "100%" }}
       size="middle"
+      className="flex-1 min-h-0"
     />
   );
 };

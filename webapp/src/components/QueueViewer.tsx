@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Button, Tabs, message as antMessage, Switch, Card } from "antd";
+import { Button, Tabs, message as antMessage, Switch, Card, Input } from "antd";
 import { ReloadOutlined, PlusOutlined } from "@ant-design/icons";
 import { useServiceBus } from "../hooks/useServiceBus";
 import { SendMessageModal } from "./SendMessageModal";
 import { MessageTable } from "./MessageTable";
+import { useMessageFilter } from "../hooks/useMessageFilter";
+import { useServiceBusStore } from "../stores/serviceBusStore";
 import type { ServiceBusMessage } from "../types/serviceBus";
 
 interface QueueViewerProps {
@@ -27,8 +29,11 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
     setViewMode,
   } = useServiceBus();
 
+  const setSelectedMessage = useServiceBusStore((state) => state.setSelectedMessage);
+
   const [activeTab, setActiveTab] = useState<"active" | "dlq">("active");
   const [sendMessageModalVisible, setSendMessageModalVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -36,6 +41,8 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
   });
 
   const queueName = selectedNode?.replace("queue-", "") || "";
+  const filteredMessages = useMessageFilter(messages, searchTerm);
+  const filteredDlqMessages = useMessageFilter(dlqMessages, searchTerm);
 
   useEffect(() => {
     if (queueName) {
@@ -57,7 +64,7 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
       ...prev,
       current: page,
       pageSize: pageSize || prev.pageSize,
-      total: activeTab === "active" ? messages.length : dlqMessages.length,
+      total: activeTab === "active" ? filteredMessages.length : filteredDlqMessages.length,
     }));
   };
 
@@ -74,7 +81,7 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
   return (
     <Card className="h-full flex flex-col overflow-hidden">
       <div className="mb-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold">Queue: {displayName}</h2>
             <div className="flex items-center gap-2">
@@ -110,54 +117,65 @@ export const QueueViewer: React.FC<QueueViewerProps> = ({ selectedNode }) => {
             </Button>
           </div>
         </div>
+        <Input.Search
+          placeholder="Search in message body..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+          allowClear
+        />
       </div>
 
       <Tabs
         activeKey={activeTab}
         onChange={handleTabChange}
-        className="flex-1 flex flex-col min-h-0"
+        className="flex-1 min-h-0 flex flex-col"
         items={[
           {
             key: "active",
             label: "Active Messages",
             children: (
-              <MessageTable
-                messages={messages}
-                onViewMessage={(message) => {
-                  antMessage.info(JSON.stringify(message, null, 2));
-                }}
-                onDeleteMessage={handleDeleteMessage}
-                deletingMessage={deletingMessage}
-                queueName={queueName}
-                pagination={{
-                  ...pagination,
-                  total: messages.length,
-                }}
-                onPaginationChange={handlePaginationChange}
-              />
+              <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0">
+                  <MessageTable
+                    messages={filteredMessages}
+                    onViewMessage={(message) => setSelectedMessage(message)}
+                    onDeleteMessage={handleDeleteMessage}
+                    deletingMessage={deletingMessage}
+                    queueName={queueName}
+                    pagination={{
+                      ...pagination,
+                      total: filteredMessages.length,
+                    }}
+                    onPaginationChange={handlePaginationChange}
+                  />
+                </div>
+              </div>
             ),
           },
           {
             key: "dlq",
             label: "Dead Letter Queue",
             children: (
-              <MessageTable
-                messages={dlqMessages}
-                onViewMessage={(message) => {
-                  antMessage.info(JSON.stringify(message, null, 2));
-                }}
-                onDeleteMessage={handleDeleteMessage}
-                onResendMessage={handleResendMessage}
-                deletingMessage={deletingMessage}
-                resendingMessage={resendingMessage}
-                queueName={queueName}
-                isDlq={true}
-                pagination={{
-                  ...pagination,
-                  total: dlqMessages.length,
-                }}
-                onPaginationChange={handlePaginationChange}
-              />
+              <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0">
+                  <MessageTable
+                    messages={filteredDlqMessages}
+                    onViewMessage={(message) => setSelectedMessage(message)}
+                    onDeleteMessage={handleDeleteMessage}
+                    onResendMessage={handleResendMessage}
+                    deletingMessage={deletingMessage}
+                    resendingMessage={resendingMessage}
+                    queueName={queueName}
+                    isDlq={true}
+                    pagination={{
+                      ...pagination,
+                      total: filteredDlqMessages.length,
+                    }}
+                    onPaginationChange={handlePaginationChange}
+                  />
+                </div>
+              </div>
             ),
           },
         ]}
