@@ -68,6 +68,7 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
         overflowY: "auto",
         paddingRight: "8px",
       }}
+      className="create-queue-modal"
     >
       <Form
         form={form}
@@ -113,6 +114,7 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
               name="enableDeadLetteringOnMessageExpiration"
               valuePropName="checked"
               label="Enable Dead Lettering on Message Expiration"
+              style={{ marginBottom: 4 }}
             >
               <Switch />
             </Form.Item>
@@ -122,6 +124,7 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
               name="requiresSession"
               valuePropName="checked"
               label="Enable Session Support"
+              style={{ marginBottom: 4 }}
             >
               <Switch />
             </Form.Item>
