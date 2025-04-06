@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Button, Select } from "antd";
+import { Modal, Form, Input, Button, Select, Collapse, message } from "antd";
 import type { ServiceBusMessage } from "../types/serviceBus";
+import { DownOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
 
@@ -33,6 +34,18 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
         body = values.body;
       }
 
+      let applicationProperties: Record<string, any> | undefined;
+      if (values.applicationProperties) {
+        try {
+          applicationProperties = JSON.parse(values.applicationProperties);
+          if (typeof applicationProperties !== "object" || applicationProperties === null) {
+            throw new Error("Application properties must be a valid JSON object");
+          }
+        } catch (e) {
+          throw new Error("Invalid application properties format. Must be a valid JSON object.");
+        }
+      }
+
       const message: ServiceBusMessage = {
         messageId: values.messageId,
         body,
@@ -40,6 +53,7 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
         correlationId: values.correlationId,
         subject: values.subject,
         sessionId: values.sessionId,
+        applicationProperties,
       };
 
       await onSend(message);
@@ -47,6 +61,11 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Failed to send message:", error);
+      if (error instanceof Error) {
+        message.error(error.message);
+      } else {
+        message.error("Failed to send message");
+      }
     } finally {
       setSending(false);
     }
@@ -92,27 +111,62 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
           />
         </Form.Item>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Form.Item name="contentType" label="Content Type">
-            <Select>
-              <Select.Option value="application/json">application/json</Select.Option>
-              <Select.Option value="text/plain">text/plain</Select.Option>
-              <Select.Option value="application/xml">application/xml</Select.Option>
-            </Select>
-          </Form.Item>
+        <Collapse ghost expandIcon={({ isActive }) => <DownOutlined rotate={isActive ? 180 : 0} />}>
+          <Collapse.Panel header="Message Properties" key="1">
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item name="contentType" label="Content Type">
+                <Select>
+                  <Select.Option value="application/json">application/json</Select.Option>
+                  <Select.Option value="text/plain">text/plain</Select.Option>
+                  <Select.Option value="application/xml">application/xml</Select.Option>
+                </Select>
+              </Form.Item>
 
-          <Form.Item name="correlationId" label="Correlation ID">
-            <Input placeholder="Enter correlation ID" />
-          </Form.Item>
+              <Form.Item name="correlationId" label="Correlation ID">
+                <Input placeholder="Enter correlation ID" />
+              </Form.Item>
 
-          <Form.Item name="subject" label="Subject">
-            <Input placeholder="Enter subject" />
-          </Form.Item>
+              <Form.Item name="subject" label="Subject">
+                <Input placeholder="Enter subject" />
+              </Form.Item>
 
-          <Form.Item name="sessionId" label="Session ID">
-            <Input placeholder="Enter session ID" />
-          </Form.Item>
-        </div>
+              <Form.Item name="sessionId" label="Session ID">
+                <Input placeholder="Enter session ID" />
+              </Form.Item>
+            </div>
+          </Collapse.Panel>
+
+          <Collapse.Panel header="Application Properties" key="2">
+            <Form.Item
+              name="applicationProperties"
+              extra={
+                <div>
+                  <p>
+                    Enter a JSON object of custom properties that can be used for message filtering.
+                  </p>
+                  <p>Example:</p>
+                  <pre className="bg-gray-50 p-2 rounded">
+                    {JSON.stringify(
+                      {
+                        priority: "high",
+                        department: "finance",
+                        userType: "premium",
+                      },
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+              }
+            >
+              <TextArea
+                rows={6}
+                placeholder='{"property1": "value1", "property2": "value2"}'
+                style={{ fontFamily: "monospace" }}
+              />
+            </Form.Item>
+          </Collapse.Panel>
+        </Collapse>
       </Form>
     </Modal>
   );
