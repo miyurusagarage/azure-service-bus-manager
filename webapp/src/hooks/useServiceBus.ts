@@ -109,15 +109,31 @@ export const useServiceBus = () => {
   const handlePeekMessages = async (queueName: string, pageSize: number = 10) => {
     try {
       setIsLoadingMessages(true);
-      const cleanQueueName = queueName.replace(/^queue-/, "");
+      const cleanQueueName = queueName.replace(/^(queue-|topic-)/, "");
 
-      const result = await window.electronAPI.peekQueueMessages(cleanQueueName, pageSize);
+      // Check if this is a topic subscription
+      if (queueName.includes("/Subscriptions/")) {
+        const [topicName, subscriptionName] = cleanQueueName.split("/Subscriptions/");
+        const result = await window.electronAPI.peekSubscriptionMessages(
+          topicName,
+          subscriptionName,
+          pageSize
+        );
 
-      if (!result.success) {
-        throw new Error(result.error || "Failed to peek messages");
+        if (!result.success) {
+          throw new Error(result.error || "Failed to peek messages");
+        }
+
+        setMessages(result.data || []);
+      } else {
+        const result = await window.electronAPI.peekQueueMessages(cleanQueueName, pageSize);
+
+        if (!result.success) {
+          throw new Error(result.error || "Failed to peek messages");
+        }
+
+        setMessages(result.data || []);
       }
-
-      setMessages(result.data || []);
     } catch (error) {
       console.error("Failed to peek messages:", error);
       setError({
