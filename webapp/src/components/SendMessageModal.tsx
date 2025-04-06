@@ -85,7 +85,14 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
         </Button>,
       ]}
       width={800}
+      style={{ maxHeight: "80vh" }}
+      bodyStyle={{
+        maxHeight: "calc(80vh - 120px)",
+        overflowY: "auto",
+        paddingRight: "16px",
+      }}
       centered={true}
+      className="send-message-modal"
     >
       <Form
         form={form}
@@ -93,6 +100,7 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
         initialValues={{
           contentType: "application/json",
         }}
+        className="pr-4"
       >
         <Form.Item name="messageId" label="Message ID">
           <Input placeholder="Optional. If not provided, a random ID will be generated." />
@@ -102,7 +110,6 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
           name="body"
           label="Message Body"
           rules={[{ required: true, message: "Please enter message body" }]}
-          extra="Enter JSON object or plain text"
         >
           <TextArea
             rows={8}
@@ -111,17 +118,17 @@ export const SendMessageModal: React.FC<SendMessageModalProps> = ({
           />
         </Form.Item>
 
+        <Form.Item name="contentType" label="Content Type">
+          <Select>
+            <Select.Option value="application/json">application/json</Select.Option>
+            <Select.Option value="text/plain">text/plain</Select.Option>
+            <Select.Option value="application/xml">application/xml</Select.Option>
+          </Select>
+        </Form.Item>
+
         <Collapse ghost expandIcon={({ isActive }) => <DownOutlined rotate={isActive ? 180 : 0} />}>
           <Collapse.Panel header="Message Properties" key="1">
             <div className="grid grid-cols-2 gap-4">
-              <Form.Item name="contentType" label="Content Type">
-                <Select>
-                  <Select.Option value="application/json">application/json</Select.Option>
-                  <Select.Option value="text/plain">text/plain</Select.Option>
-                  <Select.Option value="application/xml">application/xml</Select.Option>
-                </Select>
-              </Form.Item>
-
               <Form.Item name="correlationId" label="Correlation ID">
                 <Input placeholder="Enter correlation ID" />
               </Form.Item>
