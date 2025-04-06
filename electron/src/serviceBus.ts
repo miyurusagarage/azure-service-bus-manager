@@ -285,31 +285,53 @@ export class ServiceBusManager {
 
       // If SQL filter is provided, create a rule with SQL filter
       if (options?.sqlFilter) {
-        // Delete the default rule first
-        await this.adminClient.deleteRule(topicName, subscriptionName, "$Default");
+        try {
+          // Delete the default rule first
+          await this.adminClient.deleteRule(topicName, subscriptionName, "$Default");
 
-        // Create new rule with SQL filter
-        await this.adminClient.createRule(topicName, subscriptionName, "SQLFilter", {
-          sqlExpression: options.sqlFilter,
-        });
+          // Create new rule with SQL filter
+          await this.adminClient.createRule(topicName, subscriptionName, "SQLFilter", {
+            sqlExpression: options.sqlFilter,
+          });
+        } catch (error) {
+          console.error("Error setting SQL filter:", error);
+          // Try to clean up the subscription since filter creation failed
+          try {
+            await this.adminClient.deleteSubscription(topicName, subscriptionName);
+          } catch (deleteError) {
+            console.error("Error deleting subscription after filter creation failed:", deleteError);
+          }
+          throw error;
+        }
       }
       // If correlation filter is provided, create a rule with correlation filter
       else if (options?.correlationFilter) {
-        // Delete the default rule first
-        await this.adminClient.deleteRule(topicName, subscriptionName, "$Default");
+        try {
+          // Delete the default rule first
+          await this.adminClient.deleteRule(topicName, subscriptionName, "$Default");
 
-        // Create new rule with correlation filter
-        await this.adminClient.createRule(topicName, subscriptionName, "CorrelationFilter", {
-          correlationId: options.correlationFilter.correlationId,
-          messageId: options.correlationFilter.messageId,
-          to: options.correlationFilter.to,
-          replyTo: options.correlationFilter.replyTo,
-          label: options.correlationFilter.label,
-          sessionId: options.correlationFilter.sessionId,
-          replyToSessionId: options.correlationFilter.replyToSessionId,
-          contentType: options.correlationFilter.contentType,
-          ...options.correlationFilter.userProperties,
-        });
+          // Create new rule with correlation filter
+          await this.adminClient.createRule(topicName, subscriptionName, "CorrelationFilter", {
+            correlationId: options.correlationFilter.correlationId,
+            messageId: options.correlationFilter.messageId,
+            to: options.correlationFilter.to,
+            replyTo: options.correlationFilter.replyTo,
+            label: options.correlationFilter.label,
+            sessionId: options.correlationFilter.sessionId,
+            replyToSessionId: options.correlationFilter.replyToSessionId,
+            contentType: options.correlationFilter.contentType,
+            ...options.correlationFilter.userProperties,
+          });
+        } catch (error) {
+          console.error("Error setting correlation filter:", error);
+          // Try to clean up the subscription since filter creation failed
+          try {
+            await this.adminClient.deleteSubscription(topicName, subscriptionName);
+          } catch (deleteError) {
+            console.error("Error deleting subscription after filter creation failed:", deleteError);
+          }
+          throw error;
+        }
       }
     } catch (error) {
       console.error("Error creating subscription:", error);
