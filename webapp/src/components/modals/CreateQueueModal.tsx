@@ -12,9 +12,11 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
   const [form] = Form.useForm();
   const { refreshNamespaceInfo } = useServiceBus();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleOk = async () => {
     try {
+      setIsCreating(true);
       const values = await form.validateFields();
 
       // Convert form values to queue options
@@ -48,6 +50,8 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
       } else {
         message.error("Failed to create queue");
       }
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -61,12 +65,14 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
         onCancel();
       }}
       okText="Create"
+      okButtonProps={{ loading: isCreating }}
+      confirmLoading={isCreating}
       width={800}
       style={{ maxHeight: "80vh" }}
       bodyStyle={{
         maxHeight: "calc(80vh - 120px)",
         overflowY: "auto",
-        paddingRight: "8px",
+        paddingRight: "16px",
       }}
       className="create-queue-modal"
     >
