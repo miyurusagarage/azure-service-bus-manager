@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useServiceBusStore } from "../stores/serviceBusStore";
 import { ServiceBusTree } from "./ServiceBusTree";
 import { Button, Dropdown } from "antd";
-import { PlusOutlined, UpOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 
 interface ResizableSiderProps {
