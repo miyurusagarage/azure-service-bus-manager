@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Card, Tabs, Spin, Empty, Select, Button, Switch } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { Card, Tabs, Spin, Empty, Select, Button, Switch, Input } from "antd";
+import { ReloadOutlined, SendOutlined } from "@ant-design/icons";
 import { useServiceBus } from "../hooks/useServiceBus";
 import { MessageTable } from "./MessageTable";
 import { useMessageFilter } from "../hooks/useMessageFilter";
 import { useServiceBusStore } from "../stores/serviceBusStore";
+import { SendMessageModal } from "./SendMessageModal";
 import type { ServiceBusMessage } from "../types/serviceBus";
 
 interface TopicViewerProps {
@@ -23,6 +24,7 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
     handlePeekDlqMessages,
     handleDeleteMessage,
     handleResendMessage,
+    handleSendMessage,
     viewMode,
     setViewMode,
   } = useServiceBus();
@@ -32,6 +34,7 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
   const [selectedSubscription, setSelectedSubscription] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "dlq">("active");
   const [searchTerm, setSearchTerm] = useState("");
+  const [sendMessageModalVisible, setSendMessageModalVisible] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -90,6 +93,10 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
     }
   };
 
+  const handleSend = (message: ServiceBusMessage) => {
+    return handleSendMessage(message, topicName);
+  };
+
   if (!selectedNode) {
     return null;
   }
@@ -120,19 +127,32 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
             >
               Refresh
             </Button>
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={() => setSendMessageModalVisible(true)}
+            >
+              Send Message
+            </Button>
           </div>
         </div>
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-64">
-            <div className="text-sm text-gray-500 mb-1">Subscription</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Subscription:</span>
             <Select
-              className="w-full"
+              className="w-64"
               placeholder="Select subscription"
               value={selectedSubscription}
               onChange={setSelectedSubscription}
               options={subscriptions.map((sub) => ({ label: sub, value: sub }))}
             />
           </div>
+          <Input.Search
+            className="flex-1"
+            placeholder="Search messages"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
@@ -151,8 +171,21 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
                     <MessageTable
                       messages={filteredMessages}
                       onViewMessage={(message) => setSelectedMessage(message)}
-                      onDeleteMessage={handleDeleteMessage}
+                      onDeleteMessage={(message) =>
+                        handleDeleteMessage(
+                          message,
+                          `${topicName}/Subscriptions/${selectedSubscription}`,
+                          false
+                        )
+                      }
+                      onResendMessage={(message) =>
+                        handleResendMessage(
+                          message,
+                          `${topicName}/Subscriptions/${selectedSubscription}`
+                        )
+                      }
                       deletingMessage={deletingMessage}
+                      resendingMessage={resendingMessage}
                       queueName={`${topicName}/Subscriptions/${selectedSubscription}`}
                       pagination={{
                         ...pagination,
@@ -174,8 +207,19 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
                     <MessageTable
                       messages={filteredDlqMessages}
                       onViewMessage={(message) => setSelectedMessage(message)}
-                      onDeleteMessage={handleDeleteMessage}
-                      onResendMessage={handleResendMessage}
+                      onDeleteMessage={(message) =>
+                        handleDeleteMessage(
+                          message,
+                          `${topicName}/Subscriptions/${selectedSubscription}`,
+                          true
+                        )
+                      }
+                      onResendMessage={(message) =>
+                        handleResendMessage(
+                          message,
+                          `${topicName}/Subscriptions/${selectedSubscription}`
+                        )
+                      }
                       deletingMessage={deletingMessage}
                       resendingMessage={resendingMessage}
                       queueName={`${topicName}/Subscriptions/${selectedSubscription}`}
@@ -196,6 +240,13 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
       ) : (
         <Empty description="No subscription selected" />
       )}
+
+      <SendMessageModal
+        visible={sendMessageModalVisible}
+        onClose={() => setSendMessageModalVisible(false)}
+        onSend={handleSend}
+        queueName={topicName}
+      />
     </Card>
   );
 };
