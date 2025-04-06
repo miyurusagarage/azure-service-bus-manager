@@ -83,29 +83,31 @@ export const ServiceBusTree: React.FC<ServiceBusTreeProps> = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div>
       <Input.Search
         placeholder="Search queues and topics..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         allowClear
       />
-      <Tree
-        treeData={getTreeData()}
-        selectedKeys={selectedNode ? [selectedNode] : []}
-        onSelect={(selectedKeys) => {
-          const selected = selectedKeys[0]?.toString();
-          onNodeSelect(selected || null);
-        }}
-        showIcon
-        defaultExpandAll
-        style={{
-          fontSize: "14px",
-          lineHeight: "1.5",
-          padding: "0 8px",
-        }}
-        className="[&_.ant-tree-switcher]:mr-0 [&_.ant-tree-node-content-wrapper]:pl-1 [&_.ant-tree-switcher]:w-5 [&_.ant-tree-switcher:before]:w-5 [&_.ant-tree-node-content-wrapper]:border-b [&_.ant-tree-node-content-wrapper]:border-gray-100 [&_.ant-tree-treenode]:py-1 [&_.ant-tree-node-content-wrapper]:transition-colors [&_.ant-tree-node-content-wrapper:hover]:!bg-gray-50 [&_.ant-tree-node-selected]:!bg-blue-50 [&_.ant-tree-indent-unit]:!w-3 [&_.ant-tree-switcher]:!w-3 [&_.ant-tree-node-content-wrapper]:ml-0"
-      />
+      <div className="mt-2">
+        <Tree
+          treeData={getTreeData()}
+          selectedKeys={selectedNode ? [selectedNode] : []}
+          onSelect={(selectedKeys) => {
+            const selected = selectedKeys[0]?.toString();
+            onNodeSelect(selected || null);
+          }}
+          showIcon
+          defaultExpandAll
+          style={{
+            fontSize: "14px",
+            lineHeight: "1.5",
+            padding: "0 8px",
+          }}
+          className="[&_.ant-tree-switcher]:mr-0 [&_.ant-tree-node-content-wrapper]:pl-1 [&_.ant-tree-switcher]:w-5 [&_.ant-tree-switcher:before]:w-5 [&_.ant-tree-node-content-wrapper]:border-b [&_.ant-tree-node-content-wrapper]:border-gray-100 [&_.ant-tree-treenode]:py-1 [&_.ant-tree-node-content-wrapper]:transition-colors [&_.ant-tree-node-content-wrapper:hover]:!bg-gray-50 [&_.ant-tree-node-selected]:!bg-blue-50 [&_.ant-tree-indent-unit]:!w-3 [&_.ant-tree-switcher]:!w-3 [&_.ant-tree-node-content-wrapper]:ml-0"
+        />
+      </div>
     </div>
   );
 };
