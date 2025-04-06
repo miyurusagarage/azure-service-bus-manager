@@ -6,6 +6,7 @@ import { ResizableSider } from "../components/ResizableSider";
 import { Header } from "../components/Header";
 import { ConnectionPrompt } from "../components/ConnectionPrompt";
 import { MessageDetailsModal } from "../components/MessageDetailsModal";
+import { WelcomePage } from "../components/WelcomePage";
 import { useServiceBusStore } from "../stores/serviceBusStore";
 
 const { Content } = Layout;
@@ -18,7 +19,9 @@ export const MainPage: React.FC = () => {
   }
 
   const renderViewer = () => {
-    if (!selectedNode) return null;
+    if (!selectedNode) {
+      return <WelcomePage />;
+    }
 
     if (selectedNode.startsWith("topic-")) {
       return <TopicViewer selectedNode={selectedNode} />;
@@ -32,7 +35,7 @@ export const MainPage: React.FC = () => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <ResizableSider />
-        <Content className="bg-gray-50 p-6 overflow-auto flex-1">{renderViewer()}</Content>
+        <Content className="bg-gray-50 overflow-auto flex-1">{renderViewer()}</Content>
       </div>
       <MessageDetailsModal
         visible={selectedMessage !== null}
