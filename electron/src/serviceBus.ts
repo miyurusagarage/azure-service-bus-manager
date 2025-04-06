@@ -258,13 +258,27 @@ export class ServiceBusManager {
     }
   }
 
-  async createSubscription(topicName: string, subscriptionName: string): Promise<void> {
+  async createSubscription(
+    topicName: string,
+    subscriptionName: string,
+    options?: any
+  ): Promise<void> {
     if (!this.adminClient) {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
     }
 
     try {
-      await this.adminClient.createSubscription(topicName, subscriptionName);
+      await this.adminClient.createSubscription(topicName, subscriptionName, {
+        lockDuration: options?.lockDuration,
+        defaultMessageTimeToLive: options?.defaultMessageTimeToLive,
+        deadLetteringOnMessageExpiration: options?.enableDeadLetteringOnMessageExpiration,
+        maxDeliveryCount: options?.maxDeliveryCount,
+        enableBatchedOperations: options?.enableBatchedOperations,
+        requiresSession: options?.requiresSession,
+        autoDeleteOnIdle: options?.autoDeleteOnIdle,
+        forwardTo: options?.forwardTo,
+        forwardDeadLetteredMessagesTo: options?.forwardDeadLetteredMessagesTo,
+      });
     } catch (error) {
       console.error("Error creating subscription:", error);
       const serviceBusError = getServiceBusErrorMessage(error);

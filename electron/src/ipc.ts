@@ -141,13 +141,16 @@ export function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle("create-subscription", async (_, topicName: string, subscriptionName: string) => {
-    try {
-      await serviceBus.createSubscription(topicName, subscriptionName);
-      return { success: true };
-    } catch (error) {
-      console.error("Failed to create subscription:", error);
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
+  ipcMain.handle(
+    "create-subscription",
+    async (_, topicName: string, subscriptionName: string, options?: any) => {
+      try {
+        await serviceBus.createSubscription(topicName, subscriptionName, options);
+        return { success: true };
+      } catch (error) {
+        console.error("Failed to create subscription:", error);
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
+      }
     }
-  });
+  );
 }

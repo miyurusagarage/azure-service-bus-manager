@@ -36,6 +36,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   createTopic: (topicName: string, options?: any) =>
     ipcRenderer.invoke("create-topic", topicName, options),
 
-  createSubscription: (topicName: string, subscriptionName: string) =>
-    ipcRenderer.invoke("create-subscription", topicName, subscriptionName),
+  createSubscription: (topicName: string, subscriptionName: string, options?: any) =>
+    ipcRenderer.invoke("create-subscription", topicName, subscriptionName, options),
 });

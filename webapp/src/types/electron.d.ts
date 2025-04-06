@@ -44,6 +44,18 @@ interface TopicOptions {
   autoDeleteOnIdle?: string; // ISO 8601 duration format
 }
 
+interface SubscriptionOptions {
+  lockDuration?: string; // ISO 8601 duration format
+  defaultMessageTimeToLive?: string; // ISO 8601 duration format
+  enableDeadLetteringOnMessageExpiration?: boolean;
+  maxDeliveryCount?: number;
+  enableBatchedOperations?: boolean;
+  requiresSession?: boolean;
+  autoDeleteOnIdle?: string; // ISO 8601 duration format
+  forwardTo?: string;
+  forwardDeadLetteredMessagesTo?: string;
+}
+
 interface ElectronAPI {
   connectServiceBus: (connectionString: string) => Promise<{
     success: boolean;
@@ -96,7 +108,8 @@ interface ElectronAPI {
   ) => Promise<{ success: boolean; error?: string }>;
   createSubscription: (
     topicName: string,
-    subscriptionName: string
+    subscriptionName: string,
+    options?: SubscriptionOptions
   ) => Promise<{ success: boolean; error?: string }>;
 }
 
