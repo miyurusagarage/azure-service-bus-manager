@@ -1,22 +1,35 @@
 import React from "react";
-import { Modal, Form, Input } from "antd";
+import { Modal, Form, Input, message } from "antd";
+import { useServiceBus } from "../../hooks/useServiceBus";
 
 interface CreateTopicModalProps {
   visible: boolean;
   onCancel: () => void;
-  onOk: (values: { name: string }) => Promise<void>;
 }
 
-export const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ visible, onCancel, onOk }) => {
+export const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ visible, onCancel }) => {
   const [form] = Form.useForm();
+  const { refreshNamespaceInfo } = useServiceBus();
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      await onOk(values);
+
+      const result = await window.electronAPI.createTopic(values.name);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create topic");
+      }
+
+      message.success(`Topic "${values.name}" created successfully`);
       form.resetFields();
+      onCancel();
+      await refreshNamespaceInfo();
     } catch (error) {
-      // Form validation error
+      if (error instanceof Error) {
+        message.error(error.message);
+      } else {
+        message.error("Failed to create topic");
+      }
     }
   };
 

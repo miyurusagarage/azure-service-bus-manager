@@ -59,6 +59,27 @@ export const useServiceBus = () => {
     }
   };
 
+  const refreshNamespaceInfo = async () => {
+    if (!isConnected || !namespaceInfo) return;
+
+    try {
+      const [queuesResult, topicsResult] = await Promise.all([
+        window.electronAPI.listQueues(),
+        window.electronAPI.listTopics(),
+      ]);
+
+      if (queuesResult.success && topicsResult.success) {
+        setNamespaceInfo({
+          ...namespaceInfo,
+          queues: queuesResult.data || [],
+          topics: topicsResult.data || [],
+        });
+      }
+    } catch (error) {
+      console.error("Failed to refresh namespace info:", error);
+    }
+  };
+
   const handleDeleteMessage = async (
     message: ServiceBusMessage,
     queueName: string,
@@ -345,5 +366,6 @@ export const useServiceBus = () => {
     handleSendMessage,
     handleConnect,
     handleDisconnect,
+    refreshNamespaceInfo,
   };
 };

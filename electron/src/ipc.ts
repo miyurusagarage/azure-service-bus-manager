@@ -120,4 +120,34 @@ export function setupIpcHandlers() {
     serviceBus.disconnect();
     return { success: true };
   });
+
+  ipcMain.handle("create-queue", async (_, queueName: string) => {
+    try {
+      await serviceBus.createQueue(queueName);
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to create queue:", error);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  ipcMain.handle("create-topic", async (_, topicName: string) => {
+    try {
+      await serviceBus.createTopic(topicName);
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to create topic:", error);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
+  ipcMain.handle("create-subscription", async (_, topicName: string, subscriptionName: string) => {
+    try {
+      await serviceBus.createSubscription(topicName, subscriptionName);
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to create subscription:", error);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
 }

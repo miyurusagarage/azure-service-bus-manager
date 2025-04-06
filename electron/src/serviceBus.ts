@@ -210,6 +210,48 @@ export class ServiceBusManager {
     }
   }
 
+  async createQueue(queueName: string): Promise<void> {
+    if (!this.adminClient) {
+      throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
+    }
+
+    try {
+      await this.adminClient.createQueue(queueName);
+    } catch (error) {
+      console.error("Error creating queue:", error);
+      const serviceBusError = getServiceBusErrorMessage(error);
+      throw new Error(JSON.stringify(serviceBusError));
+    }
+  }
+
+  async createTopic(topicName: string): Promise<void> {
+    if (!this.adminClient) {
+      throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
+    }
+
+    try {
+      await this.adminClient.createTopic(topicName);
+    } catch (error) {
+      console.error("Error creating topic:", error);
+      const serviceBusError = getServiceBusErrorMessage(error);
+      throw new Error(JSON.stringify(serviceBusError));
+    }
+  }
+
+  async createSubscription(topicName: string, subscriptionName: string): Promise<void> {
+    if (!this.adminClient) {
+      throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
+    }
+
+    try {
+      await this.adminClient.createSubscription(topicName, subscriptionName);
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      const serviceBusError = getServiceBusErrorMessage(error);
+      throw new Error(JSON.stringify(serviceBusError));
+    }
+  }
+
   async listSubscriptions(topicName: string): Promise<string[]> {
     if (!this.adminClient) {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));

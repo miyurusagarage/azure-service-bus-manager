@@ -29,4 +29,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("delete-message", queueName, message, isDlq),
 
   disconnectServiceBus: () => ipcRenderer.invoke("disconnect-service-bus"),
+
+  createQueue: (queueName: string) => ipcRenderer.invoke("create-queue", queueName),
+
+  createTopic: (topicName: string) => ipcRenderer.invoke("create-topic", topicName),
+
+  createSubscription: (topicName: string, subscriptionName: string) =>
+    ipcRenderer.invoke("create-subscription", topicName, subscriptionName),
 });

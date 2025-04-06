@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Dropdown, message } from "antd";
+import { Button, Dropdown } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { CreateQueueModal } from "./modals/CreateQueueModal";
@@ -11,59 +11,21 @@ type ResourceType = "queue" | "topic" | "subscription";
 export const CreateResourceModal: React.FC = () => {
   const [resourceType, setResourceType] = useState<ResourceType | null>(null);
 
-  const handleCreateResource = (type: ResourceType) => {
-    setResourceType(type);
-  };
-
-  const handleCancel = () => {
-    setResourceType(null);
-  };
-
-  const handleCreateQueue = async (values: { name: string }) => {
-    try {
-      // TODO: Implement queue creation
-      message.success(`Queue "${values.name}" created successfully`);
-      setResourceType(null);
-    } catch (error) {
-      message.error("Failed to create queue");
-    }
-  };
-
-  const handleCreateTopic = async (values: { name: string }) => {
-    try {
-      // TODO: Implement topic creation
-      message.success(`Topic "${values.name}" created successfully`);
-      setResourceType(null);
-    } catch (error) {
-      message.error("Failed to create topic");
-    }
-  };
-
-  const handleCreateSubscription = async (values: { name: string; topicName: string }) => {
-    try {
-      // TODO: Implement subscription creation
-      message.success(`Subscription "${values.name}" created successfully`);
-      setResourceType(null);
-    } catch (error) {
-      message.error("Failed to create subscription");
-    }
-  };
-
   const items: MenuProps["items"] = [
     {
       key: "queue",
       label: "Create Queue",
-      onClick: () => handleCreateResource("queue"),
+      onClick: () => setResourceType("queue"),
     },
     {
       key: "topic",
       label: "Create Topic",
-      onClick: () => handleCreateResource("topic"),
+      onClick: () => setResourceType("topic"),
     },
     {
       key: "subscription",
       label: "Create Subscription",
-      onClick: () => handleCreateResource("subscription"),
+      onClick: () => setResourceType("subscription"),
     },
   ];
 
@@ -80,20 +42,11 @@ export const CreateResourceModal: React.FC = () => {
           </Button>
         </Dropdown>
       </div>
-      <CreateQueueModal
-        visible={resourceType === "queue"}
-        onCancel={handleCancel}
-        onOk={handleCreateQueue}
-      />
-      <CreateTopicModal
-        visible={resourceType === "topic"}
-        onCancel={handleCancel}
-        onOk={handleCreateTopic}
-      />
+      <CreateQueueModal visible={resourceType === "queue"} onCancel={() => setResourceType(null)} />
+      <CreateTopicModal visible={resourceType === "topic"} onCancel={() => setResourceType(null)} />
       <CreateSubscriptionModal
         visible={resourceType === "subscription"}
-        onCancel={handleCancel}
-        onOk={handleCreateSubscription}
+        onCancel={() => setResourceType(null)}
       />
     </>
   );

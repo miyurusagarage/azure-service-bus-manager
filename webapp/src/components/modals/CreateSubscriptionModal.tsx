@@ -1,28 +1,38 @@
 import React from "react";
-import { Modal, Form, Input, Select } from "antd";
-import { useServiceBusStore } from "../../stores/serviceBusStore";
+import { Modal, Form, Input, Select, message } from "antd";
+import { useServiceBus } from "../../hooks/useServiceBus";
 
 interface CreateSubscriptionModalProps {
   visible: boolean;
   onCancel: () => void;
-  onOk: (values: { name: string; topicName: string }) => Promise<void>;
 }
 
 export const CreateSubscriptionModal: React.FC<CreateSubscriptionModalProps> = ({
   visible,
   onCancel,
-  onOk,
 }) => {
   const [form] = Form.useForm();
-  const { namespaceInfo } = useServiceBusStore();
+  const { namespaceInfo, refreshNamespaceInfo } = useServiceBus();
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      await onOk(values);
+
+      const result = await window.electronAPI.createSubscription(values.topicName, values.name);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create subscription");
+      }
+
+      message.success(`Subscription "${values.name}" created successfully`);
       form.resetFields();
+      onCancel();
+      await refreshNamespaceInfo();
     } catch (error) {
-      // Form validation error
+      if (error instanceof Error) {
+        message.error(error.message);
+      } else {
+        message.error("Failed to create subscription");
+      }
     }
   };
 

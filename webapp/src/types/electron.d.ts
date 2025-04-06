@@ -62,6 +62,12 @@ interface ElectronAPI {
     message: ServiceBusMessage,
     isDlq?: boolean
   ) => Promise<{ success: boolean; error?: string }>;
+  createQueue: (queueName: string) => Promise<{ success: boolean; error?: string }>;
+  createTopic: (topicName: string) => Promise<{ success: boolean; error?: string }>;
+  createSubscription: (
+    topicName: string,
+    subscriptionName: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {
