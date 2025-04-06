@@ -54,6 +54,18 @@ interface SubscriptionOptions {
   autoDeleteOnIdle?: string; // ISO 8601 duration format
   forwardTo?: string;
   forwardDeadLetteredMessagesTo?: string;
+  sqlFilter?: string;
+  correlationFilter?: {
+    correlationId?: string;
+    messageId?: string;
+    to?: string;
+    replyTo?: string;
+    label?: string;
+    sessionId?: string;
+    replyToSessionId?: string;
+    contentType?: string;
+    userProperties?: Record<string, any>;
+  };
 }
 
 interface ElectronAPI {

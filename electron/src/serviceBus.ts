@@ -268,7 +268,7 @@ export class ServiceBusManager {
     }
 
     try {
-      await this.adminClient.createSubscription(topicName, subscriptionName, {
+      const subscriptionOptions = {
         lockDuration: options?.lockDuration,
         defaultMessageTimeToLive: options?.defaultMessageTimeToLive,
         deadLetteringOnMessageExpiration: options?.enableDeadLetteringOnMessageExpiration,
@@ -278,7 +278,39 @@ export class ServiceBusManager {
         autoDeleteOnIdle: options?.autoDeleteOnIdle,
         forwardTo: options?.forwardTo,
         forwardDeadLetteredMessagesTo: options?.forwardDeadLetteredMessagesTo,
-      });
+      };
+
+      // Create the subscription first
+      await this.adminClient.createSubscription(topicName, subscriptionName, subscriptionOptions);
+
+      // If SQL filter is provided, create a rule with SQL filter
+      if (options?.sqlFilter) {
+        // Delete the default rule first
+        await this.adminClient.deleteRule(topicName, subscriptionName, "$Default");
+
+        // Create new rule with SQL filter
+        await this.adminClient.createRule(topicName, subscriptionName, "SQLFilter", {
+          sqlExpression: options.sqlFilter,
+        });
+      }
+      // If correlation filter is provided, create a rule with correlation filter
+      else if (options?.correlationFilter) {
+        // Delete the default rule first
+        await this.adminClient.deleteRule(topicName, subscriptionName, "$Default");
+
+        // Create new rule with correlation filter
+        await this.adminClient.createRule(topicName, subscriptionName, "CorrelationFilter", {
+          correlationId: options.correlationFilter.correlationId,
+          messageId: options.correlationFilter.messageId,
+          to: options.correlationFilter.to,
+          replyTo: options.correlationFilter.replyTo,
+          label: options.correlationFilter.label,
+          sessionId: options.correlationFilter.sessionId,
+          replyToSessionId: options.correlationFilter.replyToSessionId,
+          contentType: options.correlationFilter.contentType,
+          ...options.correlationFilter.userProperties,
+        });
+      }
     } catch (error) {
       console.error("Error creating subscription:", error);
       const serviceBusError = getServiceBusErrorMessage(error);

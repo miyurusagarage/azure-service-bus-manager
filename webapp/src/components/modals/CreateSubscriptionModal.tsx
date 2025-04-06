@@ -1,11 +1,48 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Select, Switch, InputNumber, Collapse, message, Row, Col } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Select,
+  Switch,
+  InputNumber,
+  Collapse,
+  message,
+  Row,
+  Col,
+  Radio,
+  Space,
+} from "antd";
 import { useServiceBus } from "../../hooks/useServiceBus";
 import { DownOutlined } from "@ant-design/icons";
 
 interface CreateSubscriptionModalProps {
   visible: boolean;
   onCancel: () => void;
+}
+
+interface SubscriptionOptions {
+  defaultMessageTimeToLive?: string;
+  lockDuration?: string;
+  maxDeliveryCount?: number;
+  enableDeadLetteringOnMessageExpiration?: boolean;
+  requiresSession?: boolean;
+  enableBatchedOperations?: boolean;
+  autoDeleteOnIdle?: string;
+  forwardTo?: string;
+  forwardDeadLetteredMessagesTo?: string;
+  sqlFilter?: string;
+  correlationFilter?: {
+    correlationId?: string;
+    messageId?: string;
+    to?: string;
+    replyTo?: string;
+    label?: string;
+    sessionId?: string;
+    replyToSessionId?: string;
+    contentType?: string;
+    userProperties?: Record<string, any>;
+  };
 }
 
 export const CreateSubscriptionModal: React.FC<CreateSubscriptionModalProps> = ({
@@ -15,6 +52,7 @@ export const CreateSubscriptionModal: React.FC<CreateSubscriptionModalProps> = (
   const [form] = Form.useForm();
   const { namespaceInfo, refreshNamespaceInfo } = useServiceBus();
   const [isCreating, setIsCreating] = useState(false);
+  const [filterType, setFilterType] = useState<"none" | "sql" | "correlation">("none");
 
   const handleOk = async () => {
     try {
@@ -22,7 +60,7 @@ export const CreateSubscriptionModal: React.FC<CreateSubscriptionModalProps> = (
       const values = await form.validateFields();
 
       // Convert form values to subscription options
-      const options = {
+      const options: SubscriptionOptions = {
         defaultMessageTimeToLive: values.messageTimeToLive
           ? `PT${values.messageTimeToLive}H`
           : undefined,
@@ -35,6 +73,23 @@ export const CreateSubscriptionModal: React.FC<CreateSubscriptionModalProps> = (
         forwardTo: values.forwardTo,
         forwardDeadLetteredMessagesTo: values.forwardDeadLetteredMessagesTo,
       };
+
+      // Add filter options based on the selected filter type
+      if (filterType === "sql") {
+        options.sqlFilter = values.sqlFilter;
+      } else if (filterType === "correlation") {
+        options.correlationFilter = {
+          correlationId: values.correlationId,
+          messageId: values.messageId,
+          to: values.to,
+          replyTo: values.replyTo,
+          label: values.label,
+          sessionId: values.sessionId,
+          replyToSessionId: values.replyToSessionId,
+          contentType: values.contentType,
+          userProperties: values.userProperties ? JSON.parse(values.userProperties) : undefined,
+        };
+      }
 
       const result = await window.electronAPI.createSubscription(
         values.topicName,
@@ -216,6 +271,109 @@ export const CreateSubscriptionModal: React.FC<CreateSubscriptionModalProps> = (
             >
               <Switch />
             </Form.Item>
+          </Collapse.Panel>
+
+          <Collapse.Panel header="Filter Options" key="2">
+            <Form.Item label="Filter Type">
+              <Radio.Group value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                <Space direction="vertical">
+                  <Radio value="none">No Filter</Radio>
+                  <Radio value="sql">SQL Filter</Radio>
+                  <Radio value="correlation">Correlation Filter</Radio>
+                </Space>
+              </Radio.Group>
+            </Form.Item>
+
+            {filterType === "sql" && (
+              <Form.Item
+                name="sqlFilter"
+                label="SQL Filter Expression"
+                rules={[
+                  { required: true, message: "Please enter a SQL filter expression" },
+                  {
+                    validator: (_, value) => {
+                      if (!value?.trim()) {
+                        return Promise.reject("SQL filter expression cannot be empty");
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
+                extra="Example: user.age > 18 AND user.type = 'premium'"
+              >
+                <Input.TextArea
+                  placeholder="Enter SQL filter expression"
+                  autoSize={{ minRows: 2, maxRows: 6 }}
+                />
+              </Form.Item>
+            )}
+
+            {filterType === "correlation" && (
+              <>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="correlationId" label="Correlation ID">
+                      <Input placeholder="Enter correlation ID" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="messageId" label="Message ID">
+                      <Input placeholder="Enter message ID" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="to" label="To">
+                      <Input placeholder="Enter to address" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="replyTo" label="Reply To">
+                      <Input placeholder="Enter reply to address" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="label" label="Label">
+                      <Input placeholder="Enter label" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="sessionId" label="Session ID">
+                      <Input placeholder="Enter session ID" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="replyToSessionId" label="Reply To Session ID">
+                      <Input placeholder="Enter reply to session ID" />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="contentType" label="Content Type">
+                      <Input placeholder="Enter content type" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item
+                  name="userProperties"
+                  label="User Properties"
+                  extra="Enter a JSON object of custom properties"
+                >
+                  <Input.TextArea
+                    placeholder='{"property1": "value1", "property2": "value2"}'
+                    autoSize={{ minRows: 2, maxRows: 6 }}
+                  />
+                </Form.Item>
+              </>
+            )}
           </Collapse.Panel>
         </Collapse>
       </Form>
