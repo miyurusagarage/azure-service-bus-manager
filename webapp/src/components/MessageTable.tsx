@@ -129,34 +129,55 @@ export const MessageTable: React.FC<MessageTableProps> = ({
 
   return (
     <div className="overflow-x-hidden">
-      <Table
-        dataSource={messages}
-        columns={columns}
-        rowKey={(record) => {
-          const key = record.sequenceNumber?.toString();
-          if (!key) {
-            console.error("Message has no sequence number:", record);
-            return Math.random().toString();
-          }
-          return key;
-        }}
-        pagination={{
-          ...pagination,
-          showSizeChanger: true,
-          pageSizeOptions: ["10", "20", "50", "100"],
-          onChange: onPaginationChange,
-          position: ["bottomCenter"],
-        }}
-        loading={isLoading}
-        locale={{
-          emptyText: isLoading ? null : <Empty description="No messages found" />,
-        }}
-        scroll={{ y: "calc(100vh - 420px)" }}
-        size="middle"
-        className="flex-1 min-h-0"
-        tableLayout="fixed"
-        style={{ width: "100%" }}
-      />
+      <div className="ant-spin-nested-loading">
+        <div>
+          <div
+            className="ant-spin ant-spin-spinning"
+            data-testid="loading-spinner"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <span className="ant-spin-dot-holder">
+              <span className="ant-spin-dot ant-spin-dot-spin">
+                <i className="ant-spin-dot-item" />
+                <i className="ant-spin-dot-item" />
+                <i className="ant-spin-dot-item" />
+                <i className="ant-spin-dot-item" />
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="ant-spin-container ant-spin-blur">
+          <Table
+            dataSource={messages}
+            columns={columns}
+            rowKey={(record) => {
+              const key = record.sequenceNumber?.toString();
+              if (!key) {
+                console.error("Message has no sequence number:", record);
+                return Math.random().toString();
+              }
+              return key;
+            }}
+            pagination={{
+              ...pagination,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50", "100"],
+              onChange: onPaginationChange,
+              position: ["bottomCenter"],
+            }}
+            loading={isLoading}
+            locale={{
+              emptyText: isLoading ? null : <Empty description="No messages found" />,
+            }}
+            scroll={{ y: "calc(100vh - 420px)" }}
+            size="middle"
+            className="flex-1 min-h-0"
+            tableLayout="fixed"
+            style={{ width: "100%" }}
+          />
+        </div>
+      </div>
     </div>
   );
 };
