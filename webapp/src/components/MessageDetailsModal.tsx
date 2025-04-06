@@ -16,6 +16,38 @@ export const MessageDetailsModal: React.FC<MessageDetailsModalProps> = ({
 }) => {
   if (!message) return null;
 
+  const formatMessageBody = (body: any, contentType?: string): string => {
+    if (!body) return "N/A";
+
+    try {
+      // Handle Uint8Array/Buffer
+      if (body instanceof Uint8Array || (body.buffer && body.buffer instanceof ArrayBuffer)) {
+        return new TextDecoder().decode(body);
+      }
+
+      // Handle string
+      if (typeof body === "string") {
+        return body;
+      }
+
+      // If no content type is specified, try to decode as text
+      if (!contentType) {
+        try {
+          return new TextDecoder().decode(body);
+        } catch (e) {
+          // If decoding fails, fall back to JSON stringify
+          return JSON.stringify(body, null, 2);
+        }
+      }
+
+      // Handle JSON
+      return JSON.stringify(body, null, 2);
+    } catch (error) {
+      console.error("Error formatting message body:", error);
+      return "Error displaying message body";
+    }
+  };
+
   const handleCopyBody = () => {
     navigator.clipboard
       .writeText(JSON.stringify(message.body, null, 2))
@@ -50,7 +82,7 @@ export const MessageDetailsModal: React.FC<MessageDetailsModalProps> = ({
           </div>
           <div>
             <div className="text-sm text-gray-500">Content Type</div>
-            <div>{message.contentType?.replace("application/", "") || "N/A"}</div>
+            <div className="font-mono">{message.contentType || "N/A"}</div>
           </div>
           <div>
             <div className="text-sm text-gray-500">Enqueued Time</div>
@@ -66,7 +98,7 @@ export const MessageDetailsModal: React.FC<MessageDetailsModalProps> = ({
               </Button>
             </div>
             <pre className="bg-gray-50 p-4 rounded-lg overflow-auto">
-              {JSON.stringify(message.body, null, 2)}
+              {formatMessageBody(message.body, message.contentType)}
             </pre>
           </div>
           {message.applicationProperties &&

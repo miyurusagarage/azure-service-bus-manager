@@ -44,7 +44,7 @@ function convertMessage(msg: ServiceBusReceivedMessage): ServiceBusMessage {
   return {
     messageId: msg.messageId?.toString(),
     body: msg.body,
-    contentType: msg.contentType,
+    contentType: msg.contentType || "text/plain",
     correlationId: msg.correlationId?.toString(),
     subject: msg.subject,
     to: msg.to,
@@ -285,18 +285,36 @@ export class ServiceBusManager {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
     }
 
+    let receiver = null;
     try {
-      const receiver = this.client.createReceiver(topicName, subscriptionName, {
+      receiver = this.client.createReceiver(topicName, subscriptionName, {
         receiveMode: "peekLock",
       });
-      const messages = await receiver.peekMessages(maxMessages);
-      await receiver.close();
+      console.log("Created new receiver for subscription:", subscriptionName);
+
+      // Add a small delay to ensure the receiver is ready
+      await delay(100);
+
+      // Peek messages from the beginning using Long.fromNumber
+      const messages = await receiver.peekMessages(maxMessages, {
+        fromSequenceNumber: Long.fromNumber(1),
+      });
+      console.log(`Peeked ${messages.length} messages from subscription:`, subscriptionName);
 
       return messages.map(convertMessage);
     } catch (error) {
       console.error("Error peeking subscription messages:", error);
       const serviceBusError = getServiceBusErrorMessage(error);
       throw new Error(JSON.stringify(serviceBusError));
+    } finally {
+      if (receiver) {
+        try {
+          await receiver.close();
+          console.log("Closed receiver for subscription:", subscriptionName);
+        } catch (closeError) {
+          console.error("Error closing receiver:", closeError);
+        }
+      }
     }
   }
 

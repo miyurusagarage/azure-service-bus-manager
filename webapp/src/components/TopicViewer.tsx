@@ -124,6 +124,7 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({ selectedNode }) => {
         </div>
         <div className="flex items-center gap-4 mb-4">
           <div className="w-64">
+            <div className="text-sm text-gray-500 mb-1">Subscription</div>
             <Select
               className="w-full"
               placeholder="Select subscription"
