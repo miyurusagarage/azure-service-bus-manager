@@ -1,6 +1,7 @@
-import React from "react";
-import { Modal, Form, Input, message } from "antd";
+import React, { useState } from "react";
+import { Modal, Form, Input, Switch, InputNumber, Button, Collapse, message, Row, Col } from "antd";
 import { useServiceBus } from "../../hooks/useServiceBus";
+import { DownOutlined } from "@ant-design/icons";
 
 interface CreateQueueModalProps {
   visible: boolean;
@@ -10,12 +11,29 @@ interface CreateQueueModalProps {
 export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onCancel }) => {
   const [form] = Form.useForm();
   const { refreshNamespaceInfo } = useServiceBus();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
 
-      const result = await window.electronAPI.createQueue(values.name);
+      // Convert form values to queue options
+      const options = {
+        maxSizeInGB: values.maxSizeInGB,
+        messageTimeToLive: values.messageTimeToLive ? `PT${values.messageTimeToLive}H` : undefined,
+        lockDuration: values.lockDuration ? `PT${values.lockDuration}M` : undefined,
+        enablePartitioning: values.enablePartitioning,
+        enableDeadLetteringOnMessageExpiration: values.enableDeadLetteringOnMessageExpiration,
+        requiresSession: values.requiresSession,
+        maxDeliveryCount: values.maxDeliveryCount,
+        enableDuplicateDetection: values.enableDuplicateDetection,
+        duplicateDetectionHistoryTimeWindow: values.duplicateDetectionHistoryTimeWindow
+          ? `PT${values.duplicateDetectionHistoryTimeWindow}H`
+          : undefined,
+        enableBatchedOperations: values.enableBatchedOperations,
+      };
+
+      const result = await window.electronAPI.createQueue(values.name, options);
       if (!result.success) {
         throw new Error(result.error || "Failed to create queue");
       }
@@ -43,8 +61,18 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
         onCancel();
       }}
       okText="Create"
+      width={800}
     >
-      <Form form={form} layout="vertical">
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          messageTimeToLive: 24,
+          maxDeliveryCount: 10,
+          enableDeadLetteringOnMessageExpiration: true,
+          enableBatchedOperations: true,
+        }}
+      >
         <Form.Item
           name="name"
           label="Queue Name"
@@ -59,6 +87,98 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
         >
           <Input placeholder="my-queue" />
         </Form.Item>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="messageTimeToLive" label="Message Time to Live (Hours)">
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="maxDeliveryCount" label="Max Delivery Count">
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="enableDeadLetteringOnMessageExpiration"
+              valuePropName="checked"
+              label="Enable Dead Lettering on Message Expiration"
+            >
+              <Switch />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="requiresSession"
+              valuePropName="checked"
+              label="Enable Session Support"
+            >
+              <Switch />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Collapse ghost expandIcon={({ isActive }) => <DownOutlined rotate={isActive ? 180 : 0} />}>
+          <Collapse.Panel header="Advanced Options" key="1">
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="maxSizeInGB" label="Max Size (GB)">
+                  <InputNumber min={1} max={5} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="lockDuration" label="Lock Duration (Minutes)">
+                  <InputNumber min={1} max={5} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="duplicateDetectionHistoryTimeWindow"
+                  label="Duplicate Detection History Time Window (Hours)"
+                >
+                  <InputNumber min={1} style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="enablePartitioning"
+                  valuePropName="checked"
+                  label="Enable Partitioning"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="enableDuplicateDetection"
+                  valuePropName="checked"
+                  label="Enable Duplicate Detection"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="enableBatchedOperations"
+                  valuePropName="checked"
+                  label="Enable Batched Operations"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Collapse.Panel>
+        </Collapse>
       </Form>
     </Modal>
   );

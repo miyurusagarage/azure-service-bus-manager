@@ -121,9 +121,9 @@ export function setupIpcHandlers() {
     return { success: true };
   });
 
-  ipcMain.handle("create-queue", async (_, queueName: string) => {
+  ipcMain.handle("create-queue", async (_, queueName: string, options?: any) => {
     try {
-      await serviceBus.createQueue(queueName);
+      await serviceBus.createQueue(queueName, options);
       return { success: true };
     } catch (error) {
       console.error("Failed to create queue:", error);

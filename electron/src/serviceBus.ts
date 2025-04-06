@@ -210,13 +210,24 @@ export class ServiceBusManager {
     }
   }
 
-  async createQueue(queueName: string): Promise<void> {
+  async createQueue(queueName: string, options?: any): Promise<void> {
     if (!this.adminClient) {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
     }
 
     try {
-      await this.adminClient.createQueue(queueName);
+      await this.adminClient.createQueue(queueName, {
+        maxSizeInMegabytes: options?.maxSizeInGB ? options.maxSizeInGB * 1024 : undefined,
+        defaultMessageTimeToLive: options?.messageTimeToLive,
+        lockDuration: options?.lockDuration,
+        enablePartitioning: options?.enablePartitioning,
+        deadLetteringOnMessageExpiration: options?.enableDeadLetteringOnMessageExpiration,
+        requiresSession: options?.requiresSession,
+        maxDeliveryCount: options?.maxDeliveryCount,
+        requiresDuplicateDetection: options?.enableDuplicateDetection,
+        duplicateDetectionHistoryTimeWindow: options?.duplicateDetectionHistoryTimeWindow,
+        enableBatchedOperations: options?.enableBatchedOperations,
+      });
     } catch (error) {
       console.error("Error creating queue:", error);
       const serviceBusError = getServiceBusErrorMessage(error);

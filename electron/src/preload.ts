@@ -30,7 +30,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   disconnectServiceBus: () => ipcRenderer.invoke("disconnect-service-bus"),
 
-  createQueue: (queueName: string) => ipcRenderer.invoke("create-queue", queueName),
+  createQueue: (queueName: string, options?: any) =>
+    ipcRenderer.invoke("create-queue", queueName, options),
 
   createTopic: (topicName: string) => ipcRenderer.invoke("create-topic", topicName),
 

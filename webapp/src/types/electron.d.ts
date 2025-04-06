@@ -20,6 +20,19 @@ interface QueueInfo {
   deadLetterCount: number;
 }
 
+interface QueueOptions {
+  maxSizeInGB?: number;
+  messageTimeToLive?: string; // ISO 8601 duration format
+  lockDuration?: string; // ISO 8601 duration format
+  enablePartitioning?: boolean;
+  enableDeadLetteringOnMessageExpiration?: boolean;
+  requiresSession?: boolean;
+  maxDeliveryCount?: number;
+  enableDuplicateDetection?: boolean;
+  duplicateDetectionHistoryTimeWindow?: string; // ISO 8601 duration format
+  enableBatchedOperations?: boolean;
+}
+
 interface ElectronAPI {
   connectServiceBus: (connectionString: string) => Promise<{
     success: boolean;
@@ -62,7 +75,10 @@ interface ElectronAPI {
     message: ServiceBusMessage,
     isDlq?: boolean
   ) => Promise<{ success: boolean; error?: string }>;
-  createQueue: (queueName: string) => Promise<{ success: boolean; error?: string }>;
+  createQueue: (
+    queueName: string,
+    options?: QueueOptions
+  ) => Promise<{ success: boolean; error?: string }>;
   createTopic: (topicName: string) => Promise<{ success: boolean; error?: string }>;
   createSubscription: (
     topicName: string,
