@@ -62,6 +62,12 @@ export const CreateQueueModal: React.FC<CreateQueueModalProps> = ({ visible, onC
       }}
       okText="Create"
       width={800}
+      style={{ maxHeight: "80vh" }}
+      bodyStyle={{
+        maxHeight: "calc(80vh - 120px)",
+        overflowY: "auto",
+        paddingRight: "8px",
+      }}
     >
       <Form
         form={form}
