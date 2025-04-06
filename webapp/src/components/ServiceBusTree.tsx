@@ -83,15 +83,9 @@ export const ServiceBusTree: React.FC<ServiceBusTreeProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <div className="text-sm text-gray-500">Namespace</div>
-        <div className="font-medium">{namespaceInfo?.name}</div>
-        <div className="text-xs text-gray-400 truncate">{namespaceInfo?.endpoint}</div>
-      </div>
+    <div className="space-y-2">
       <Input.Search
         placeholder="Search queues and topics..."
-        className="mb-4"
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         allowClear
