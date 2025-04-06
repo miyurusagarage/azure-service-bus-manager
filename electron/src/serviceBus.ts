@@ -235,13 +235,22 @@ export class ServiceBusManager {
     }
   }
 
-  async createTopic(topicName: string): Promise<void> {
+  async createTopic(topicName: string, options?: any): Promise<void> {
     if (!this.adminClient) {
       throw new Error(JSON.stringify({ message: "Not connected to Service Bus" }));
     }
 
     try {
-      await this.adminClient.createTopic(topicName);
+      await this.adminClient.createTopic(topicName, {
+        maxSizeInMegabytes: options?.maxSizeInGB ? options.maxSizeInGB * 1024 : undefined,
+        defaultMessageTimeToLive: options?.defaultMessageTimeToLive,
+        enablePartitioning: options?.enablePartitioning,
+        requiresDuplicateDetection: options?.enableDuplicateDetection,
+        duplicateDetectionHistoryTimeWindow: options?.duplicateDetectionHistoryTimeWindow,
+        enableBatchedOperations: options?.enableBatchedOperations,
+        supportOrdering: options?.supportOrdering,
+        autoDeleteOnIdle: options?.autoDeleteOnIdle,
+      });
     } catch (error) {
       console.error("Error creating topic:", error);
       const serviceBusError = getServiceBusErrorMessage(error);

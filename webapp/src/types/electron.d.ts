@@ -33,6 +33,17 @@ interface QueueOptions {
   enableBatchedOperations?: boolean;
 }
 
+interface TopicOptions {
+  maxSizeInGB?: number;
+  defaultMessageTimeToLive?: string; // ISO 8601 duration format
+  enablePartitioning?: boolean;
+  enableDuplicateDetection?: boolean;
+  duplicateDetectionHistoryTimeWindow?: string; // ISO 8601 duration format
+  enableBatchedOperations?: boolean;
+  supportOrdering?: boolean;
+  autoDeleteOnIdle?: string; // ISO 8601 duration format
+}
+
 interface ElectronAPI {
   connectServiceBus: (connectionString: string) => Promise<{
     success: boolean;
@@ -79,7 +90,10 @@ interface ElectronAPI {
     queueName: string,
     options?: QueueOptions
   ) => Promise<{ success: boolean; error?: string }>;
-  createTopic: (topicName: string) => Promise<{ success: boolean; error?: string }>;
+  createTopic: (
+    topicName: string,
+    options?: TopicOptions
+  ) => Promise<{ success: boolean; error?: string }>;
   createSubscription: (
     topicName: string,
     subscriptionName: string

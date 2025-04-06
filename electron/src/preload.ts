@@ -33,7 +33,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   createQueue: (queueName: string, options?: any) =>
     ipcRenderer.invoke("create-queue", queueName, options),
 
-  createTopic: (topicName: string) => ipcRenderer.invoke("create-topic", topicName),
+  createTopic: (topicName: string, options?: any) =>
+    ipcRenderer.invoke("create-topic", topicName, options),
 
   createSubscription: (topicName: string, subscriptionName: string) =>
     ipcRenderer.invoke("create-subscription", topicName, subscriptionName),

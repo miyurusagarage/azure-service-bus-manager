@@ -131,9 +131,9 @@ export function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle("create-topic", async (_, topicName: string) => {
+  ipcMain.handle("create-topic", async (_, topicName: string, options?: any) => {
     try {
-      await serviceBus.createTopic(topicName);
+      await serviceBus.createTopic(topicName, options);
       return { success: true };
     } catch (error) {
       console.error("Failed to create topic:", error);
